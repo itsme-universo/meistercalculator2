@@ -388,13 +388,44 @@ export default function TeacherIlCalculator() {
 
         const gedSubjects: { subject: string; score: number }[] = [];
 
-        // 각 행에서 과목 데이터 추출
-        for (const row of rows) {
-          const subjectInfo = String(row[subjectIdx] || "").trim();
-          const grade = String(row[gradeIdx] || "").trim();
+        // 과목 데이터 추출 - 멀티라인 지원
+        const subjectGradePairs: { subject: string; grade: string }[] = [];
+        
+        // 첫 번째 행에서 E2, F2 셀의 멀티라인 데이터 확인
+        const firstRowSubject = String(firstRow[subjectIdx] || "").trim();
+        const firstRowGrade = String(firstRow[gradeIdx] || "").trim();
+        
+        if (firstRowSubject.includes('\n') || firstRowGrade.includes('\n')) {
+          // 멀티라인 형식: E2, F2에서 줄바꿈으로 분리
+          const subjectLines = firstRowSubject.split('\n').map(s => s.trim()).filter(s => s);
+          const gradeLines = firstRowGrade.split('\n').map(s => s.trim()).filter(s => s);
           
-          if (!subjectInfo || !grade) continue;
-
+          // 줄 수 불일치 체크
+          if (subjectLines.length !== gradeLines.length) {
+            throw new Error(`학기/과목과 성적 줄 수가 불일치합니다. (학기/과목: ${subjectLines.length}줄, 성적: ${gradeLines.length}줄)`);
+          }
+          
+          // 각 줄을 쌍으로 묶어서 처리
+          for (let i = 0; i < subjectLines.length; i++) {
+            subjectGradePairs.push({
+              subject: subjectLines[i],
+              grade: gradeLines[i]
+            });
+          }
+        } else {
+          // 기존 다중 행 형식: 각 행에서 개별적으로 추출
+          for (const row of rows) {
+            const subjectInfo = String(row[subjectIdx] || "").trim();
+            const grade = String(row[gradeIdx] || "").trim();
+            
+            if (!subjectInfo || !grade) continue;
+            
+            subjectGradePairs.push({ subject: subjectInfo, grade: grade });
+          }
+        }
+        
+        // 추출된 과목-성적 쌍들을 처리
+        for (const { subject: subjectInfo, grade } of subjectGradePairs) {
           if (atype === "검정고시") {
             // 검정고시: 과목명과 점수
             const score = Number(grade);
@@ -538,35 +569,72 @@ export default function TeacherIlCalculator() {
     ];
     worksheet.addRow(headers);
 
-    // 샘플 데이터 (일마이스터고는 교과와 출결만)
+    // 멀티라인 샘플 데이터 생성
+    const multilineSubjectData = `1학년1학기|국어
+1학년1학기|영어
+1학년1학기|수학
+1학년1학기|과학
+1학년2학기|국어
+1학년2학기|영어
+1학년2학기|수학
+1학년2학기|과학
+2학년1학기|국어
+2학년1학기|영어
+2학년1학기|수학
+2학년1학기|과학
+2학년2학기|국어
+2학년2학기|영어
+2학년2학기|수학
+2학년2학기|과학
+3학년1학기|국어
+3학년1학기|영어
+3학년1학기|수학
+3학년1학기|과학`;
+
+    const multilineGradeData = `A
+B
+A
+A
+A
+B
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A`;
+
+    const multilineSubjectData2 = `1학년1학기|국어
+1학년1학기|영어
+1학년1학기|수학
+1학년1학기|과학`;
+
+    const multilineGradeData2 = `B
+B
+A
+A`;
+
+    const gedSubjectData = `과목1
+과목2
+과목3`;
+
+    const gedGradeData = `95
+88
+92`;
+
+    // 샘플 데이터 (멀티라인 형식)
     const sampleData = [
-      ["00000-00001", "홍길동", "일반전형", "졸업예정자", "1학년1학기|국어", "A", "2", "1", "0", "2", "3", "1"],
-      ["", "", "", "", "1학년1학기|영어", "B", "", "", "", "", "", ""],
-      ["", "", "", "", "1학년1학기|수학", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "1학년1학기|과학", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "1학년2학기|국어", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "1학년2학기|영어", "B", "", "", "", "", "", ""],
-      ["", "", "", "", "1학년2학기|수학", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "1학년2학기|과학", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "2학년1학기|국어", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "2학년1학기|영어", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "2학년1학기|수학", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "2학년1학기|과학", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "2학년2학기|국어", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "2학년2학기|영어", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "2학년2학기|수학", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "2학년2학기|과학", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "3학년1학기|국어", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "3학년1학기|영어", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "3학년1학기|수학", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "3학년1학기|과학", "A", "", "", "", "", "", ""],
-      ["00000-00002", "김철수", "특별전형", "졸업생", "1학년1학기|국어", "B", "1", "0", "1", "1", "2", "0"],
-      ["", "", "", "", "1학년1학기|영어", "B", "", "", "", "", "", ""],
-      ["", "", "", "", "1학년1학기|수학", "A", "", "", "", "", "", ""],
-      ["", "", "", "", "1학년1학기|과학", "A", "", "", "", "", "", ""],
-      ["00000-00003", "이영희", "일반전형", "검정고시", "과목1", "95", "", "", "", "", "", ""],
-      ["", "", "", "", "과목2", "88", "", "", "", "", "", ""],
-      ["", "", "", "", "과목3", "92", "", "", "", "", "", ""]
+      ["00000-00001", "홍길동", "일반전형", "졸업예정자", multilineSubjectData, multilineGradeData, "2", "1", "0", "2", "3", "1"],
+      ["00000-00002", "김철수", "특별전형", "졸업생", multilineSubjectData2, multilineGradeData2, "1", "0", "1", "1", "2", "0"],
+      ["00000-00003", "이영희", "일반전형", "검정고시", gedSubjectData, gedGradeData, "", "", "", "", "", ""]
     ];
     
     sampleData.forEach(row => {
@@ -580,6 +648,19 @@ export default function TeacherIlCalculator() {
       pattern: "solid",
       fgColor: { argb: "FFE0E0E0" }
     };
+
+    // 멀티라인 셀에 WrapText 적용 (E, F 컬럼)
+    for (let i = 2; i <= 4; i++) { // 2행부터 4행까지 (샘플 데이터)
+      const row = worksheet.getRow(i);
+      const eCell = row.getCell(5); // E 컬럼 (학기/과목)
+      const fCell = row.getCell(6); // F 컬럼 (성적)
+      
+      eCell.alignment = { wrapText: true, vertical: 'top' };
+      fCell.alignment = { wrapText: true, vertical: 'top' };
+      
+      // 행 높이 자동 조정 (ExcelJS에서는 undefined 대신 null 사용)
+      row.height = null as any; // 자동 높이
+    }
 
     // 컬럼 너비 설정
     worksheet.getColumn(1).width = 15;
