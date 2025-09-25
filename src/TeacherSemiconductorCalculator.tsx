@@ -252,7 +252,8 @@ export default function TeacherSemiconductorCalculator() {
 
   // 수상실적 점수 계산
   const calculateAwards = (awardsCount: number) => {
-    return Math.min(5, awardsCount);
+    // 1개당 2점 부여하되, 최대 6점 (0개 0점, 1개 2점, 2개 4점, 3개 6점, 4~무한 6점)
+    return Math.min(6, awardsCount * 2);
   };
 
   // 점수 계산 (학생용 계산기와 동일한 로직)
@@ -713,8 +714,8 @@ A`;
 
     // 샘플 데이터 (멀티라인 형식)
     const sampleData = [
-      ["00000-00001", "홍길동", "일반전형", "재학생", multilineSubjectData, multilineGradeData, "2021년-10시간", "2022년-8시간", "2023년-12시간", "2", "3", "0", "2", "3", "1", "3", "2", "1"],
-      ["00000-00002", "김철수", "특별전형", "졸업생", multilineSubjectData2, multilineGradeData2, "2020년-15시간", "2021년-12시간", "2022년-10시간", "1", "0", "1", "1", "2", "0", "4", "3", "2"],
+      ["00000-00001", "홍길동", "일반전형", "재학생", multilineSubjectData, multilineGradeData, "2021년-10시간", "2022년-8시간", "2023년-12시간", "2", "3", "1", "2", "3", "1", "3", "2", "3"],
+      ["00000-00002", "김철수", "특별전형", "졸업생", multilineSubjectData2, multilineGradeData2, "2020년-15시간", "2021년-12시간", "2022년-10시간", "1", "0", "2", "1", "2", "0", "4", "3", "1"],
       ["00000-00003", "이영희", "일반전형", "검정고시", gedSubjectData, gedGradeData, "", "", "", "", "", "", "", "", "", "2", "1", "0"]
     ];
     
