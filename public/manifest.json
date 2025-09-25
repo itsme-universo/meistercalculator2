@@ -1,0 +1,15 @@
+{
+  "short_name": "마이스터고성적계산기",
+  "name": "마이스터고성적계산기",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#22c55e",
+  "background_color": "#ffffff"
+}
