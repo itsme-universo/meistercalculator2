@@ -244,6 +244,9 @@ export default function TeacherAgricultureCalculator() {
       // 헤더에서 컬럼 인덱스 찾기
       console.log('엑셀 헤더:', headers);
       
+      const examNumberIdx = headers.findIndex((h: any) => 
+        String(h).includes("수험번호") || String(h).includes("수험") || String(h).includes("exam")
+      );
       const nameIdx = headers.findIndex((h: any) => 
         String(h).includes("이름") || String(h).includes("성명") || String(h).includes("name")
       );
@@ -263,21 +266,26 @@ export default function TeacherAgricultureCalculator() {
       console.log('컬럼 인덱스:', { nameIdx, trackIdx, atypeIdx, subjectIdx, gradeIdx });
 
 
+      if (examNumberIdx === -1) {
+        throw new Error("수험번호 컬럼을 찾을 수 없습니다.");
+      }
       if (nameIdx === -1) {
         throw new Error("이름 컬럼을 찾을 수 없습니다.");
       }
 
-      // 학생별로 데이터 그룹화
+      // 학생별로 데이터 그룹화 (수험번호 기준)
       const studentGroups: { [key: string]: any[][] } = {};
       let currentStudent = "";
 
+      console.log(`총 ${jsonData.length - 1}행의 데이터를 처리합니다.`);
+      
       for (let i = 1; i < jsonData.length; i++) {
         const row = jsonData[i] as any[];
         if (!row || row.length === 0) continue;
 
-        const name = String(row[nameIdx] || "").trim();
-        if (name) {
-          currentStudent = name;
+        const examNumber = String(row[examNumberIdx] || "").trim();
+        if (examNumber) {
+          currentStudent = examNumber;
           if (!studentGroups[currentStudent]) {
             studentGroups[currentStudent] = [];
           }
@@ -287,12 +295,23 @@ export default function TeacherAgricultureCalculator() {
           studentGroups[currentStudent].push(row);
         }
       }
+      
+      console.log(`그룹화 완료: ${Object.keys(studentGroups).length}명의 학생 발견`);
 
       // 각 학생 데이터 처리
-      for (const [studentName, rows] of Object.entries(studentGroups)) {
-        if (!studentName || rows.length === 0) continue;
+      console.log(`총 ${Object.keys(studentGroups).length}명의 학생 데이터를 처리합니다.`);
+      let processedCount = 0;
+      
+      for (const [examNumber, rows] of Object.entries(studentGroups)) {
+        if (!examNumber || rows.length === 0) continue;
+        
+        processedCount++;
+        if (processedCount % 50 === 0) {
+          console.log(`${processedCount}명 처리 중...`);
+        }
 
         const firstRow = rows[0];
+        const name = String(firstRow[nameIdx] || "").trim();
         const track = (firstRow[trackIdx] || "일반전형").toString().includes("특별") ? "특별전형" : "일반전형";
         const atypeRaw = (firstRow[atypeIdx] || "졸업예정자").toString();
         let atype: ApplicantType = "졸업예정자";
@@ -397,7 +416,7 @@ export default function TeacherAgricultureCalculator() {
         }
 
         const student: StudentData = {
-          name: studentName,
+          name: name,
           track,
           atype,
           subjects,
