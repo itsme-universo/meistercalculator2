@@ -210,7 +210,11 @@ export default function TeacherSoftwareCalculator() {
       const absent = 100 - att; // 출석률에서 결석일수 계산
       a += Math.max(0, Math.floor(absent / 20)); // 20%당 1일 결석으로 환산
     }
-    const score = 10 - 2 * a - 2 * l;
+    // 소프트웨어마이스터고 출결 로직: 10점 만점
+    const baseAbsent = a;
+    const addAbsentFromLate = Math.floor(l / 3);
+    const effectiveAbsent = Math.min(5, baseAbsent + addAbsentFromLate);
+    const score = 10 - 2 * effectiveAbsent;
     return Math.max(0, score);
   };
 
@@ -238,14 +242,16 @@ export default function TeacherSoftwareCalculator() {
     return score1 + score2 + score3; // 최대 9점
   };
 
-  // 리더십 점수 계산
+  // 리더십 점수 계산 (학생용과 동일한 로직)
   const calculateLeadership = (leadership: number) => {
-    return Math.min(5, leadership);
+    // 소프트웨어마이스터고: 1회당 2점, 최대 2점
+    return Math.min(2, leadership * 2);
   };
 
-  // 수상실적 점수 계산
+  // 수상실적 점수 계산 (학생용과 동일한 로직)
   const calculateAwards = (awardsCount: number) => {
-    return Math.min(5, awardsCount);
+    // 소프트웨어마이스터고: 1회당 1점, 최대 2점
+    return Math.min(2, Math.max(0, Math.floor(awardsCount)));
   };
 
   // 점수 계산 (학생용 계산기와 동일한 로직)
@@ -259,10 +265,10 @@ export default function TeacherSoftwareCalculator() {
       if (pts.length === 0) return { courseScore: 0, attScore: 0, volScore: 0, bonusLeadership: 0, bonusAwards: 0, totalScore: 0 };
       const avg = pts.reduce((a, b) => a + b, 0) / pts.length;
       const courseScore = round3(avg * 20); // 100점 만점
-      const attScore = round3(calculateAttendance(attBySem));
-      const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year));
-      const bonusLeadership = round3(calculateLeadership(leadership));
-      const bonusAwards = round3(calculateAwards(awardsCount));
+      const attScore = 0; // 검정고시는 출결 점수 없음
+      const volScore = 0; // 검정고시는 봉사 점수 없음
+      const bonusLeadership = 0; // 검정고시는 리더십 점수 없음
+      const bonusAwards = 0; // 검정고시는 수상 점수 없음
       const totalScore = round3(courseScore + attScore + volScore + bonusLeadership + bonusAwards);
       return { courseScore, attScore, volScore, bonusLeadership, bonusAwards, totalScore };
     } else {
@@ -273,7 +279,9 @@ export default function TeacherSoftwareCalculator() {
         const { avg } = calculateSemStats(subjects, s.key);
         sum += avg * w;
       }
-      const courseScore = round3(sum); // 100점 만점 (가중합 그대로)
+      
+      // 소프트웨어마이스터고: 재학생/졸업생 교과 80점 만점
+      const courseScore = round3(sum * 0.8); // 80점 만점 (가중합 * 0.8)
       const attScore = round3(calculateAttendance(attBySem));
       const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year));
       const bonusLeadership = round3(calculateLeadership(leadership));

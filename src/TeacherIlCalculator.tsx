@@ -17,15 +17,27 @@ const SEMS = [
   { key: "3-2", year: 3, label: "3학년 2학기" },
 ] as const;
 
-// 학기별 기본 계수(유형별)
-function baseCoeff(atype: ApplicantType, semKey: string) {
+// 학기별 기본 계수(유형별) - 일마이스터고 정확한 규칙
+function baseCoeff(atype: ApplicantType, semKey: string, track: TrackType) {
   if (atype === "검정고시") return 0;
-  if (atype === "졸업예정자") {
-    const map: Record<string, number> = { "1-1": 2, "1-2": 2, "2-1": 4, "2-2": 4, "3-1": 8, "3-2": 0 };
-    return map[semKey] ?? 0;
+  
+  if (track === "일반전형") {
+    if (atype === "졸업예정자") {
+      const map: Record<string, number> = { "1-1": 1.2, "1-2": 1.2, "2-1": 1.8, "2-2": 1.8, "3-1": 6, "3-2": 0 };
+      return map[semKey] ?? 0;
+    } else { // 졸업생
+      const map: Record<string, number> = { "1-1": 1.2, "1-2": 1.2, "2-1": 1.8, "2-2": 1.8, "3-1": 3, "3-2": 3 };
+      return map[semKey] ?? 0;
+    }
+  } else { // 특별전형
+    if (atype === "졸업예정자") {
+      const map: Record<string, number> = { "1-1": 1, "1-2": 1, "2-1": 1.5, "2-2": 1.5, "3-1": 5, "3-2": 0 };
+      return map[semKey] ?? 0;
+    } else { // 졸업생
+      const map: Record<string, number> = { "1-1": 1, "1-2": 1, "2-1": 1.5, "2-2": 1.5, "3-1": 2.5, "3-2": 2.5 };
+      return map[semKey] ?? 0;
+    }
   }
-  const map: Record<string, number> = { "1-1": 2, "1-2": 2, "2-1": 4, "2-2": 4, "3-1": 4, "3-2": 4 };
-  return map[semKey] ?? 0;
 }
 
 // 등급→점수
@@ -106,9 +118,9 @@ export default function TeacherIlCalculator() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // 자유학기 유효성 검사
-  const isFreeSemValid = (freeSem: Record<string, boolean>, atype: ApplicantType) => {
+  const isFreeSemValid = (freeSem: Record<string, boolean>, atype: ApplicantType, track: TrackType) => {
     if (atype === "검정고시") return true;
-    const selected = Object.keys(freeSem).filter((k) => freeSem[k] && baseCoeff(atype, k) > 0);
+    const selected = Object.keys(freeSem).filter((k) => freeSem[k] && baseCoeff(atype, k, track) > 0);
     if (selected.length === 0) return true;
     const years = new Set<number>();
     for (const k of selected) {
@@ -119,16 +131,16 @@ export default function TeacherIlCalculator() {
   };
 
   // 실효 계수 계산
-  const calculateEffectiveCoeffs = (atype: ApplicantType, freeSem: Record<string, boolean>) => {
+  const calculateEffectiveCoeffs = (atype: ApplicantType, freeSem: Record<string, boolean>, track: TrackType) => {
     const eff: Record<string, number> = {};
-    for (const s of SEMS) eff[s.key] = baseCoeff(atype, s.key);
+    for (const s of SEMS) eff[s.key] = baseCoeff(atype, s.key, track);
 
     if (atype !== "검정고시") {
       // 규칙2: 학년 내 한 학기만 자유 → 다른 학기에 연간 합계 몰아주기
       for (const year of [1, 2, 3]) {
         const yearSems = SEMS.filter((s) => s.year === year);
         if (yearSems.length === 0) continue;
-        const baseYearTotal = yearSems.reduce((a, s) => a + baseCoeff(atype, s.key), 0);
+        const baseYearTotal = yearSems.reduce((a, s) => a + baseCoeff(atype, s.key, track), 0);
         const marked = yearSems.filter((s) => freeSem[s.key]).length;
 
         if (marked === 1) {
@@ -157,9 +169,9 @@ export default function TeacherIlCalculator() {
             eff[s.key] += add * ratio;
           }
         } else {
-          const baseTotal = tSems.reduce((a, s) => a + baseCoeff(atype, s.key), 0);
+          const baseTotal = tSems.reduce((a, s) => a + baseCoeff(atype, s.key, track), 0);
           for (const s of tSems) {
-            const b = baseCoeff(atype, s.key);
+            const b = baseCoeff(atype, s.key, track);
             eff[s.key] += add * (b / baseTotal);
           }
         }
@@ -168,15 +180,15 @@ export default function TeacherIlCalculator() {
       const yearEffTotal = (y: number) =>
         SEMS.filter((s) => s.year === y).reduce((a, s) => a + eff[s.key], 0);
       const yearBaseTotal = (y: number) =>
-        SEMS.filter((s) => s.year === y).reduce((a, s) => a + baseCoeff(atype, s.key), 0);
+        SEMS.filter((s) => s.year === y).reduce((a, s) => a + baseCoeff(atype, s.key, track), 0);
 
       if (yearEffTotal(1) === 0 && yearBaseTotal(1) > 0) addToYear(2, yearBaseTotal(1));
       if (yearEffTotal(2) === 0 && yearBaseTotal(2) > 0) addToYear(1, yearBaseTotal(2));
       if (yearEffTotal(3) === 0 && yearBaseTotal(3) > 0) addToYear(2, yearBaseTotal(3));
     }
 
-    // 합계 = 20 유지
-    const targetSum = 20;
+    // 합계 보정: 일반전형 12, 특별전형 10
+    const targetSum = track === "일반전형" ? 12 : 10;
     const currentSum = Object.values(eff).reduce((a, b) => a + b, 0);
     if (currentSum > 0 && Math.abs(currentSum - targetSum) > 1e-9) {
       const k = targetSum / currentSum;
@@ -200,9 +212,9 @@ export default function TeacherIlCalculator() {
   };
 
   // 출결 점수 계산 (학생용과 동일한 로직)
-  const calculateAttendance = (attBySem: Record<string, number>) => {
+  const calculateAttendance = (attBySem: Record<string, number>, track: TrackType) => {
     const considered = SEMS.filter((s) => 
-      baseCoeff("졸업예정자", s.key) > 0 || baseCoeff("졸업생", s.key) > 0
+      baseCoeff("졸업예정자", s.key, track) > 0 || baseCoeff("졸업생", s.key, track) > 0
     );
     let a = 0, l = 0;
     for (const s of considered) {
@@ -210,8 +222,10 @@ export default function TeacherIlCalculator() {
       const absent = 100 - att; // 출석률에서 결석일수 계산
       a += Math.max(0, Math.floor(absent / 20)); // 20%당 1일 결석으로 환산
     }
-    const score = 10 - 2 * a - 2 * l;
-    return Math.max(0, score);
+    // 일마이스터고 출결 로직: 일반전형 40점, 특별전형 50점
+    return track === "일반전형"
+      ? Math.max(0, 40 - 6 * a - 2 * l)
+      : Math.max(0, 50 - 9 * a - 3 * l);
   };
 
   // 봉사활동 점수 계산 (학생용과 동일한 로직)
@@ -251,7 +265,7 @@ export default function TeacherIlCalculator() {
   // 점수 계산 (학생용 계산기와 동일한 로직)
   const calculateScore = (student: StudentData) => {
     const { track, atype, subjects, freeSem, gedSubjects, attBySem } = student;
-    const effectiveCoeffs = calculateEffectiveCoeffs(atype, freeSem);
+    const effectiveCoeffs = calculateEffectiveCoeffs(atype, freeSem, track);
 
     if (atype === "검정고시") {
       if (gedSubjects.length === 0) return { courseScore: 0, attScore: 0, totalScore: 0 };
@@ -259,7 +273,7 @@ export default function TeacherIlCalculator() {
       if (pts.length === 0) return { courseScore: 0, attScore: 0, totalScore: 0 };
       const avg = pts.reduce((a, b) => a + b, 0) / pts.length;
       const courseScore = round3(avg * 20); // 100점 만점
-      const attScore = round3(calculateAttendance(attBySem));
+      const attScore = 0; // 검정고시는 출결 점수 없음
       const totalScore = round3(courseScore + attScore);
       return { courseScore, attScore, totalScore };
     } else {
@@ -270,8 +284,9 @@ export default function TeacherIlCalculator() {
         const { avg } = calculateSemStats(subjects, s.key);
         sum += avg * w;
       }
-      const courseScore = round3(sum); // 100점 만점 (가중합 그대로)
-      const attScore = round3(calculateAttendance(attBySem));
+      // 일마이스터고: 일반전형 교과 60점, 특별전형 교과 50점
+      const courseScore = round3(sum);
+      const attScore = round3(calculateAttendance(attBySem, track));
       const totalScore = round3(courseScore + attScore);
       return { courseScore, attScore, totalScore };
     }
@@ -504,7 +519,7 @@ export default function TeacherIlCalculator() {
         return {
           ...student,
           ...score,
-          isValid: isFreeSemValid(student.freeSem, student.atype)
+          isValid: isFreeSemValid(student.freeSem, student.atype, student.track)
         };
       });
 
