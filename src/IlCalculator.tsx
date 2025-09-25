@@ -662,10 +662,6 @@ input[type="radio"], input[type="checkbox"]{ accent-color:#22c55e }
         .uploader small{ color:var(--gray-500); font-size:12px; }
       `}</style>
 
-      <button className="btn" onClick={() => navigate("/student")} style={{ marginBottom: "20px" }}>
-        ← 목록으로
-      </button>
-
       <h1>대구일마이스터고 1차 전형 모의 성적 계산기</h1>
       <div className="muted" style={{ margin: "10px 0" }}>
         • 본 계산기는 <b>1차 전형</b>만 대상으로 합니다. (2차 전형의

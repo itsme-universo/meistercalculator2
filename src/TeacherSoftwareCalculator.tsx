@@ -727,10 +727,6 @@ export default function TeacherSoftwareCalculator() {
         .result-table tr:nth-child(even){ background:var(--gray-50) }
       `}</style>
 
-      <button className="btn" onClick={() => navigate("/teacher")} style={{ marginBottom: "20px" }}>
-        ← 목록으로
-      </button>
-
       <h1>대구소프트웨어마이스터고 선생님용 계산기</h1>
       <div className="muted" style={{ margin: "10px 0" }}>
         대량 엑셀 데이터를 업로드하여 일괄 계산하세요.

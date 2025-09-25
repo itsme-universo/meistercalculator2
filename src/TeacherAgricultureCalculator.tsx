@@ -596,10 +596,6 @@ export default function TeacherAgricultureCalculator() {
         .result-table tr:nth-child(even){ background:var(--gray-50) }
       `}</style>
 
-      <button className="btn" onClick={() => window.location.href = "/teacher"} style={{ marginBottom: "20px" }}>
-        ← 목록으로
-      </button>
-
       <h1>대구농업마이스터고 선생님용 계산기</h1>
       <div className="muted" style={{ margin: "10px 0" }}>
         대량 엑셀 데이터를 업로드하여 일괄 계산하세요.

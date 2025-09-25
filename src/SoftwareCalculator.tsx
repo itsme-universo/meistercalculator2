@@ -643,10 +643,6 @@ export default function SoftwareCalculator() {
         .uploader small{ color:var(--gray-500); font-size:12px; }
       `}</style>
 
-      <button className="btn" onClick={() => navigate("/student")} style={{ marginBottom: "20px" }}>
-        ← 목록으로
-      </button>
-
       <h1>대구소프트웨어마이스터고 1차 전형 모의 성적 계산기</h1>
       <div className="muted" style={{ margin: "10px 0" }}>
         • 1차 전형만 계산합니다. (2차 전형의 면접/소양평가 등은 제외) <br />•

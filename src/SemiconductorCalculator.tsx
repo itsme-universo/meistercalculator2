@@ -704,10 +704,6 @@ export default function SemiconductorCalculator() {
         input[type="radio"], input[type="checkbox"]{ accent-color:#22c55e }
       `}</style>
 
-      <button className="btn" onClick={() => navigate("/student")} style={{ marginBottom: "20px" }}>
-        ← 목록으로
-      </button>
-
       <h1>대구반도체마이스터고 1차 전형 성적 계산기</h1>
       <div className="muted" style={{ margin: "10px 0" }}>
         • 본 계산기는 <b>1차 전형</b>만 대상으로 합니다. (2차 전형의
