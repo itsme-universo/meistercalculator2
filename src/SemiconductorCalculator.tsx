@@ -26,6 +26,33 @@ const GRADE_PAIRED_OPTIONS = [
   { value: "E/가", display: "E/가" },
 ] as const;
 
+// 등급을 드롭다운 형식으로 변환하는 함수
+function normalizeGradeForDropdown(v?: string | null): string {
+  const t = (v || "").trim().toUpperCase();
+  if (!t) return "";
+  
+  // 이미 올바른 형식인 경우
+  if (["A/수", "B/우", "C/미", "D/양", "E/가"].includes(t)) {
+    return t;
+  }
+  
+  // 단일 문자/단어를 드롭다운 형식으로 변환
+  const gradeMap: Record<string, string> = {
+    A: "A/수",
+    B: "B/우", 
+    C: "C/미",
+    D: "D/양",
+    E: "E/가",
+    "수": "A/수",
+    "우": "B/우",
+    "미": "C/미", 
+    "양": "D/양",
+    "가": "E/가",
+  };
+  
+  return gradeMap[t] || "";
+}
+
 function mapGradeToPoint(v?: string | null) {
   const t = (v || "").trim().toUpperCase();
   const map: Record<string, number> = {
@@ -37,22 +64,64 @@ function mapGradeToPoint(v?: string | null) {
   if (!t) return null;
   
   // 정확한 매칭 시도
-  if (map[t]) return map[t];
+  if (map[t]) {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> ${map[t]}점`);
+    return map[t];
+  }
   
   // 단일 항목 자동 매핑
-  if (t === 'A') return 5;
-  if (t === 'B') return 4;
-  if (t === 'C') return 3;
-  if (t === 'D') return 2;
-  if (t === 'E') return 1;
-  if (t === '수') return 5;
-  if (t === '우') return 4;
-  if (t === '미') return 3;
-  if (t === '양') return 2;
-  if (t === '가') return 1;
-  if (t === '우수') return 5;
-  if (t === '보통') return 4;
-  if (t === '미흡') return 3;
+  if (t === 'A') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 5점`);
+    return 5;
+  }
+  if (t === 'B') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 4점`);
+    return 4;
+  }
+  if (t === 'C') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 3점`);
+    return 3;
+  }
+  if (t === 'D') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 2점`);
+    return 2;
+  }
+  if (t === 'E') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 1점`);
+    return 1;
+  }
+  if (t === '수') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 5점`);
+    return 5;
+  }
+  if (t === '우') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 4점`);
+    return 4;
+  }
+  if (t === '미') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 3점`);
+    return 3;
+  }
+  if (t === '양') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 2점`);
+    return 2;
+  }
+  if (t === '가') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 1점`);
+    return 1;
+  }
+  if (t === '우수') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 5점`);
+    return 5;
+  }
+  if (t === '보통') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 4점`);
+    return 4;
+  }
+  if (t === '미흡') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 3점`);
+    return 3;
+  }
   
   console.log(`등급 인식 실패: "${v}" -> "${t}"`);
   return null;
@@ -518,7 +587,9 @@ export default function SemiconductorCalculator({ onBack }: SemiconductorCalcula
           const semIndex = Math.floor(c / 2);
           const semKey = SEMS[semIndex]?.key;
           if (semKey) {
-            out[semKey].push({ name, grade, mathSci: false });
+            const normalizedGrade = normalizeGradeForDropdown(grade);
+            console.log(`엑셀 파싱: ${semKey} - "${name}" / "${grade}" -> "${normalizedGrade}"`);
+            out[semKey].push({ name, grade: normalizedGrade, mathSci: false });
           }
         }
       }

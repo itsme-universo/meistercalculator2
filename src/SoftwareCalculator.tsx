@@ -47,6 +47,33 @@ interface GedSubject {
   score: number;
 }
 
+// 등급을 드롭다운 형식으로 변환하는 함수
+function normalizeGradeForDropdown(v?: string | null): string {
+  const t = (v || "").trim().toUpperCase();
+  if (!t) return "";
+  
+  // 이미 올바른 형식인 경우
+  if (["A/수", "B/우", "C/미", "D/양", "E/가"].includes(t)) {
+    return t;
+  }
+  
+  // 단일 문자/단어를 드롭다운 형식으로 변환
+  const gradeMap: Record<string, string> = {
+    A: "A/수",
+    B: "B/우", 
+    C: "C/미",
+    D: "D/양",
+    E: "E/가",
+    "수": "A/수",
+    "우": "B/우",
+    "미": "C/미", 
+    "양": "D/양",
+    "가": "E/가",
+  };
+  
+  return gradeMap[t] || "";
+}
+
 function mapGradeToPoint(v?: string | null) {
   const t = (v || "").trim().toUpperCase();
   const map: Record<string, number> = {

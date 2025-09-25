@@ -46,6 +46,36 @@ const GRADE_3 = [
   { value: "C/미흡", display: "C/미흡" },
 ] as const;
 
+// 등급을 드롭다운 형식으로 변환하는 함수
+function normalizeGradeForDropdown(v?: string | null): string {
+  const t = (v || "").trim().toUpperCase();
+  if (!t) return "";
+  
+  // 이미 올바른 형식인 경우
+  if (["A/수", "B/우", "C/미", "D/양", "E/가", "A/우수", "B/보통", "C/미흡"].includes(t)) {
+    return t;
+  }
+  
+  // 단일 문자/단어를 드롭다운 형식으로 변환
+  const gradeMap: Record<string, string> = {
+    A: "A/수",
+    B: "B/우", 
+    C: "C/미",
+    D: "D/양",
+    E: "E/가",
+    "수": "A/수",
+    "우": "B/우",
+    "미": "C/미", 
+    "양": "D/양",
+    "가": "E/가",
+    "우수": "A/우수",
+    "보통": "B/보통",
+    "미흡": "C/미흡",
+  };
+  
+  return gradeMap[t] || "";
+}
+
 // 등급→점수
 function mapGradeToPoint(v?: string | null) {
   const t = (v || "").trim().toUpperCase();
@@ -326,7 +356,9 @@ export default function AgricultureCalculator() {
               if (!SEMS.some((s) => s.key === sem)) continue;
               if (baseCoeff(atype, sem) <= 0) continue;
               if (mapGradeToPoint(grade) == null) continue;
-              newSubjects[sem].push({ name, grade });
+              const normalizedGrade = normalizeGradeForDropdown(grade);
+              console.log(`엑셀 파싱: ${sem} - "${name}" / "${grade}" -> "${normalizedGrade}"`);
+              newSubjects[sem].push({ name, grade: normalizedGrade });
             }
           }
           parsed = true;
@@ -345,7 +377,9 @@ export default function AgricultureCalculator() {
             if (!SEMS.some((s) => s.key === sem)) continue;
             if (baseCoeff(atype, sem) <= 0) continue;
             if (mapGradeToPoint(grade) == null) continue;
-            newSubjects[sem].push({ name, grade });
+            const normalizedGrade = normalizeGradeForDropdown(grade);
+            console.log(`엑셀 파싱: ${sem} - "${name}" / "${grade}" -> "${normalizedGrade}"`);
+            newSubjects[sem].push({ name, grade: normalizedGrade });
           }
         }
 
