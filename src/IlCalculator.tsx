@@ -741,9 +741,6 @@ input[type="radio"], input[type="checkbox"]{ accent-color:#22c55e }
           />
           <button className="btn" onClick={handleFilePick}>엑셀 업로드</button>
 
-          <small>
-            단일 시트 그리드(B2~M25) 형식을 지원합니다.
-          </small>
           {uploadMsg && <div className="muted">{uploadMsg}</div>}
         </div>
       </section>
@@ -914,10 +911,6 @@ input[type="radio"], input[type="checkbox"]{ accent-color:#22c55e }
                           </button>
                         </div>
 
-                        <div className="muted" style={{ marginTop: 8 }}>
-                          평균(1~5) = (등급점 평균). 등급을 선택하지 않은
-                          행(또는 P/F)은 반영되지 않습니다.
-                        </div>
                       </div>
                     </div>
                   );
@@ -932,11 +925,6 @@ input[type="radio"], input[type="checkbox"]{ accent-color:#22c55e }
       {atype !== "검정고시" && (
         <section className="card" style={{ marginBottom: 16 }}>
           <h3>출결</h3>
-          <div className="muted">
-            {track === "일반전형"
-              ? "산식: 40 – (미인정 결석×6) – (미인정 지각/조퇴/결과×2) · 최저 0점"
-              : "산식: 50 – (미인정 결석×9) – (미인정 지각/조퇴/결과×3) · 최저 0점"}
-          </div>
 
           {[1, 2, 3].map((year) => (
             <div key={year} className="year-block">
@@ -994,10 +982,6 @@ input[type="radio"], input[type="checkbox"]{ accent-color:#22c55e }
                               style={{ marginTop: 4 }}
                             />
                           </div>
-                        </div>
-                        <div className="muted" style={{ marginTop: 6 }}>
-                          입력값은 학기별로 합산하여 출결 점수를 계산합니다.
-                          (자유학기 여부와 무관)
                         </div>
                       </div>
                     </div>

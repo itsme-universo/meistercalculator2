@@ -768,9 +768,6 @@ export default function SemiconductorCalculator({ onBack }: SemiconductorCalcula
           />
           <button className="btn" onClick={handleFilePick}>엑셀 업로드</button>
 
-          <small>
-            단일 시트 그리드(B2~M25) 형식을 지원합니다.
-          </small>
           {uploadMsg && <div className="muted">{uploadMsg}</div>}
         </div>
       </section>
@@ -808,14 +805,6 @@ export default function SemiconductorCalculator({ onBack }: SemiconductorCalcula
                         }}
                       >
                         <strong>학기: {sem.key}</strong>
-                        <span className="badge-muted">
-                          실효 가중치 ×{round3(effectiveWeights[sem.key])}
-                        </span>
-                      </div>
-                      <div className="badge-muted" style={{ marginTop: 4 }}>
-                        반영 과목수(가중): <b>{round3(weightedCount)}</b> (행{" "}
-                        {includedRowCount}개) · 평균 미리보기:{" "}
-                        <b>{round3(avg).toFixed(3)}</b>
                       </div>
                     </div>
                     <label
@@ -965,10 +954,6 @@ export default function SemiconductorCalculator({ onBack }: SemiconductorCalcula
                       </button>
                     </div>
 
-                    <div className="badge-muted" style={{ marginTop: 8 }}>
-                      평균(1~5) = (가중합 ÷ 가중수).{" "}
-                      <b>수학/과학 체크 시 ×1.5</b>, 음악·미술·체육은 반영 제외.
-                    </div>
                   </div>
                 </div>
               );
@@ -1056,9 +1041,6 @@ export default function SemiconductorCalculator({ onBack }: SemiconductorCalcula
       {atype !== "검정고시" && (
         <section className="card" style={{ marginBottom: 16 }}>
           <h3>출결</h3>
-          <div className="muted">
-            산식: 46 – (미인정 결석×6) – (미인정 지각/조퇴/결과×2) · 최저 0점
-          </div>
 
           {[1, 2, 3].map((year) => (
             <div key={year} className="year-block">
@@ -1124,10 +1106,6 @@ export default function SemiconductorCalculator({ onBack }: SemiconductorCalcula
                               style={{ marginTop: 4 }}
                             />
                           </div>
-                        </div>
-                        <div className="muted" style={{ marginTop: 6 }}>
-                          입력값은 학기별로 합산하여 출결 점수를 계산합니다.
-                          (자유학기 여부와 무관)
                         </div>
                       </div>
                     </div>

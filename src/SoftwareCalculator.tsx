@@ -697,9 +697,6 @@ export default function SoftwareCalculator() {
           />
           <button className="btn" onClick={handleFilePick}>엑셀 업로드</button>
 
-          <small>
-            단일 시트 그리드(B2~M25) 형식을 지원합니다.
-          </small>
           {uploadMsg && <div className="muted">{uploadMsg}</div>}
         </div>
       </section>
@@ -739,9 +736,6 @@ export default function SoftwareCalculator() {
                             }}
                           >
                             <strong>학기: {sem.key}</strong>
-                            <span className="muted">
-                              실효 가중치 ×{round3(effW)}
-                            </span>
                           </div>
                         </div>
                         <label
@@ -808,10 +802,6 @@ export default function SoftwareCalculator() {
                           </div>
                         ))}
 
-                        <div className="muted" style={{ marginTop: 6 }}>
-                          평균(1~5) = (가중합 ÷ 가중수). P/F 및 미선택은
-                          제외됩니다.
-                        </div>
                       </div>
                     </div>
                   );
@@ -902,10 +892,6 @@ export default function SoftwareCalculator() {
       {atype !== "검정고시" && (
         <section className="card" style={{ marginBottom: 16 }}>
           <h3>출결</h3>
-          <div className="muted">
-            산식: 10 − (결석×2), 지각/조퇴/결과는 <b>3회=결석 1일</b>로
-            환산(2회 이하는 버림)
-          </div>
 
           {[1, 2, 3].map((year) => (
             <div key={year} className="year-block">
@@ -971,10 +957,6 @@ export default function SoftwareCalculator() {
                               style={{ marginTop: 4 }}
                             />
                           </div>
-                        </div>
-                        <div className="muted" style={{ marginTop: 6 }}>
-                          입력값은 학기별로 합산하여 출결 점수를 계산합니다.
-                          (자유학기 여부와 무관)
                         </div>
                       </div>
                     </div>
@@ -1069,11 +1051,6 @@ export default function SoftwareCalculator() {
                     onChange={(e) => setVol3Year(e.target.value)}
                   />
                 </div>
-              </div>
-              <div className="muted" style={{ marginTop: 6 }}>
-                2024년 이후: 10h↑=2.0 / 7~&lt;10=1.6 / &lt;7=1.2<br/>
-                2024년 이전: 10h↑=1.0 / 7~&lt;10=0.8 / &lt;7=0.6<br/>
-                (0시간 포함) · 합계 최대 6.0
               </div>
             </div>
           </div>
