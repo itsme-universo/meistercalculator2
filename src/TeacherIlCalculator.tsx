@@ -677,40 +677,19 @@ A`;
       worksheet.addRow(row);
     });
 
-    // 스타일 적용
+    // 기본 스타일만 적용 (복잡한 스타일 제거)
     worksheet.getRow(1).font = { bold: true };
-    worksheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFE0E0E0" }
-    };
 
-    // 멀티라인 셀에 WrapText 적용 (E, F 컬럼)
-    for (let i = 2; i <= 4; i++) { // 2행부터 4행까지 (샘플 데이터)
+    // 멀티라인 셀에 기본 정렬만 적용
+    for (let i = 2; i <= 4; i++) {
       const row = worksheet.getRow(i);
-      const eCell = row.getCell(5); // E 컬럼 (학기/과목)
-      const fCell = row.getCell(6); // F 컬럼 (성적)
+      const eCell = row.getCell(5);
+      const fCell = row.getCell(6);
       
-      eCell.alignment = { wrapText: true, vertical: 'top' };
-      fCell.alignment = { wrapText: true, vertical: 'top' };
-      
-      // 행 높이 자동 조정 (ExcelJS에서는 undefined 대신 null 사용)
-      row.height = null as any; // 자동 높이
+      eCell.alignment = { wrapText: true };
+      fCell.alignment = { wrapText: true };
     }
 
-    // 컬럼 너비 설정
-    worksheet.getColumn(1).width = 15;
-    worksheet.getColumn(2).width = 12;
-    worksheet.getColumn(3).width = 12;
-    worksheet.getColumn(4).width = 12;
-    worksheet.getColumn(5).width = 20;
-    worksheet.getColumn(6).width = 12;
-    worksheet.getColumn(7).width = 15;
-    worksheet.getColumn(8).width = 15;
-    worksheet.getColumn(9).width = 15;
-    worksheet.getColumn(10).width = 15;
-    worksheet.getColumn(11).width = 15;
-    worksheet.getColumn(12).width = 15;
 
     // 파일 다운로드
     const buffer = await workbook.xlsx.writeBuffer();

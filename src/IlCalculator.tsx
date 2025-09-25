@@ -90,24 +90,78 @@ const GRADE_3 = [
 ] as const;
 
 function mapGradeToPoint(v?: string | null) {
-  const t = (v || "").trim();
+  const t = (v || "").trim().toUpperCase();
   const map: Record<string, number> = {
-    "A/수": 5,
-    "B/우": 4,
-    "C/미": 3,
-    "D/양": 2,
-    "E/가": 1,
-    "A/우수": 5,
-    "B/보통": 4,
-    "C/미흡": 3,
-    A: 5,
-    B: 4,
-    C: 3,
-    D: 2,
-    E: 1,
+    "A/수": 5, "B/우": 4, "C/미": 3, "D/양": 2, "E/가": 1,
+    "A/우수": 5, "B/보통": 4, "C/미흡": 3,
+    A: 5, B: 4, C: 3, D: 2, E: 1,
+    "수": 5, "우": 4, "미": 3, "양": 2, "가": 1,
+    "우수": 5, "보통": 4, "미흡": 3,
   };
   if (!t) return null;
-  return map[t] ?? null;
+  
+  // 정확한 매칭 시도
+  if (map[t]) {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> ${map[t]}점`);
+    return map[t];
+  }
+  
+  // 단일 항목 자동 매핑
+  if (t === 'A') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 5점`);
+    return 5;
+  }
+  if (t === 'B') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 4점`);
+    return 4;
+  }
+  if (t === 'C') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 3점`);
+    return 3;
+  }
+  if (t === 'D') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 2점`);
+    return 2;
+  }
+  if (t === 'E') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 1점`);
+    return 1;
+  }
+  if (t === '수') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 5점`);
+    return 5;
+  }
+  if (t === '우') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 4점`);
+    return 4;
+  }
+  if (t === '미') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 3점`);
+    return 3;
+  }
+  if (t === '양') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 2점`);
+    return 2;
+  }
+  if (t === '가') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 1점`);
+    return 1;
+  }
+  if (t === '우수') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 5점`);
+    return 5;
+  }
+  if (t === '보통') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 4점`);
+    return 4;
+  }
+  if (t === '미흡') {
+    console.log(`등급 매칭 성공: "${v}" -> "${t}" -> 3점`);
+    return 3;
+  }
+  
+  console.log(`등급 인식 실패: "${v}" -> "${t}"`);
+  return null;
 }
 
 function round3(x: number) {
@@ -167,6 +221,8 @@ export default function IlCalculator() {
   // 엑셀 업로드
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadMsg, setUploadMsg] = useState<string>("");
+
+
 
   // 자유학기 유효성 (검정고시 제외)
   const freeSemValidWithinOneYear = useMemo(() => {
@@ -459,6 +515,7 @@ export default function IlCalculator() {
           const semIndex = Math.floor(c / 2);
           const semKey = SEMS[semIndex]?.key;
           if (semKey) {
+            console.log(`엑셀 파싱: ${semKey} - "${name}" / "${grade}"`);
             out[semKey].push({ name, grade });
           }
         }
@@ -483,20 +540,11 @@ export default function IlCalculator() {
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet("Sheet1");
 
-    // 열 너비
-    const allCols = ["B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
-    const widths: Record<string, number> = {
-      B: 18, C: 10, D: 18, E: 10, F: 18, G: 10, H: 18, I: 10, J: 18, K: 10, L: 18, M: 10,
-    };
-    allCols.forEach((col) => (ws.getColumn(col).width = widths[col]));
-
-    // 공통 스타일
+    // 기본 스타일만 적용 (복잡한 스타일 제거)
     const center = { vertical: "middle", horizontal: "center" } as const;
     const bold = { bold: true } as const;
-    const white = { argb: "FFFFFFFF" };
-    const black = { argb: "FF000000" };
 
-    // 타이틀 병합
+    // 타이틀 병합 (기본 병합만 유지)
     ws.mergeCells("B2:E2");
     ws.getCell("B2").value = "1학년";
     ws.mergeCells("F2:I2");
@@ -504,18 +552,15 @@ export default function IlCalculator() {
     ws.mergeCells("J2:M2");
     ws.getCell("J2").value = "3학년";
 
-    // 타이틀 색상
-    ws.getCell("B2").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4F81BD" } };
-    ws.getCell("B2").font = { ...bold, color: white };
-    ws.getCell("F2").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFD966" } };
-    ws.getCell("F2").font = { ...bold, color: black };
-    ws.getCell("J2").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFA9D18E" } };
-    ws.getCell("J2").font = { ...bold, color: black };
+    // 기본 폰트와 정렬만 적용
+    ws.getCell("B2").font = bold;
+    ws.getCell("F2").font = bold;
+    ws.getCell("J2").font = bold;
     ws.getCell("B2").alignment = center;
     ws.getCell("F2").alignment = center;
     ws.getCell("J2").alignment = center;
 
-    // 학기 병합 라벨
+    // 학기 병합 라벨 (기본 병합만 유지)
     ([
       ["B3:C3", "1학년 1학기"],
       ["D3:E3", "1학년 2학기"],
@@ -543,54 +588,6 @@ export default function IlCalculator() {
       c.alignment = center;
     });
 
-    // 전체 테두리
-    for (let r = 2; r <= 25; r++) {
-      for (const col of allCols) {
-        const cell = ws.getCell(`${col}${r}`);
-        cell.border = {
-          top: { style: "thin", color: { argb: "FFADB5BD" } },
-          left: { style: "thin", color: { argb: "FFADB5BD" } },
-          bottom: { style: "thin", color: { argb: "FFADB5BD" } },
-          right: { style: "thin", color: { argb: "FFADB5BD" } },
-        };
-      }
-    }
-
-    // 외곽 thick 테두리
-    const outerColor = { argb: "FF111827" };
-    const leftCol = "B", rightCol = "M", topRow = 2, bottomRow = 25;
-    const patchBorder = (addr: string, patch: any) => {
-      const cell = ws.getCell(addr);
-      const prev: any = cell.border || {};
-      (cell as any).border = { ...prev, ...patch };
-    };
-    
-    // Top & Bottom
-    for (let code = leftCol.charCodeAt(0); code <= rightCol.charCodeAt(0); code++) {
-      const col = String.fromCharCode(code);
-      patchBorder(`${col}${topRow}`, { top: { style: "thick", color: outerColor } });
-      patchBorder(`${col}${bottomRow}`, { bottom: { style: "thick", color: outerColor } });
-    }
-    // Left & Right
-    for (let r = topRow; r <= bottomRow; r++) {
-      patchBorder(`${leftCol}${r}`, { left: { style: "thick", color: outerColor } });
-      patchBorder(`${rightCol}${r}`, { right: { style: "thick", color: outerColor } });
-    }
-
-    // 등급 유효성 검사
-    const gradeCols = ["C", "E", "G", "I", "K", "M"];
-    const gradeList = ["A/수", "B/우", "C/미", "D/양", "E/가", "A/우수", "B/보통", "C/미흡"];
-    
-    for (const col of gradeCols) {
-      for (let r = 5; r <= 25; r++) {
-        const cell = ws.getCell(`${col}${r}`);
-        (cell as any).dataValidation = {
-          type: "list",
-          allowBlank: true,
-          formulae: [gradeList.join(",")],
-        };
-      }
-    }
 
     // 파일 다운로드
     const buf = await wb.xlsx.writeBuffer();

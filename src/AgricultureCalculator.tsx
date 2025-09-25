@@ -48,14 +48,36 @@ const GRADE_3 = [
 
 // 등급→점수
 function mapGradeToPoint(v?: string | null) {
-  const t = (v || "").trim();
+  const t = (v || "").trim().toUpperCase();
   const map: Record<string, number> = {
     "A/수": 5, "B/우": 4, "C/미": 3, "D/양": 2, "E/가": 1,
     "A/우수": 5, "B/보통": 4, "C/미흡": 3,
     A: 5, B: 4, C: 3, D: 2, E: 1,
+    "수": 5, "우": 4, "미": 3, "양": 2, "가": 1,
+    "우수": 5, "보통": 4, "미흡": 3,
   };
   if (!t) return null;
-  return map[t] ?? null;
+  
+  // 정확한 매칭 시도
+  if (map[t]) return map[t];
+  
+  // 단일 항목 자동 매핑
+  if (t === 'A') return 5;
+  if (t === 'B') return 4;
+  if (t === 'C') return 3;
+  if (t === 'D') return 2;
+  if (t === 'E') return 1;
+  if (t === '수') return 5;
+  if (t === '우') return 4;
+  if (t === '미') return 3;
+  if (t === '양') return 2;
+  if (t === '가') return 1;
+  if (t === '우수') return 5;
+  if (t === '보통') return 4;
+  if (t === '미흡') return 3;
+  
+  console.log(`등급 인식 실패: "${v}" -> "${t}"`);
+  return null;
 }
 function round3(x: number) {
   return Math.round((x + Number.EPSILON) * 1000) / 1000;
