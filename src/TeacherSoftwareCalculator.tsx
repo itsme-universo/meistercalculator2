@@ -199,39 +199,43 @@ export default function TeacherSoftwareCalculator() {
     return { count: cnt, avg };
   };
 
-  // 출결 점수 계산
+  // 출결 점수 계산 (학생용과 동일한 로직)
   const calculateAttendance = (attBySem: Record<string, number>) => {
-    const totalDays = Object.values(attBySem).reduce((a, b) => a + b, 0);
-    if (totalDays === 0) return 0;
-    const rate = totalDays / (Object.keys(attBySem).length * 100); // 100일 기준
-    if (rate >= 0.95) return 5;
-    if (rate >= 0.90) return 4;
-    if (rate >= 0.85) return 3;
-    if (rate >= 0.80) return 2;
-    return 1;
+    const considered = SEMS.filter((s) => 
+      baseCoeff("재학생", s.key) > 0 || baseCoeff("졸업생", s.key) > 0
+    );
+    let a = 0, l = 0;
+    for (const s of considered) {
+      const att = attBySem[s.key] || 100;
+      const absent = 100 - att; // 출석률에서 결석일수 계산
+      a += Math.max(0, Math.floor(absent / 20)); // 20%당 1일 결석으로 환산
+    }
+    const score = 10 - 2 * a - 2 * l;
+    return Math.max(0, score);
   };
 
-  // 봉사활동 점수 계산
+  // 봉사활동 점수 계산 (학생용과 동일한 로직)
   const calculateVolunteer = (vol1Hours: number, vol2Hours: number, vol3Hours: number, vol1Year: number, vol2Year: number, vol3Year: number) => {
-    const totalHours = vol1Hours + vol2Hours + vol3Hours;
-    if (totalHours === 0) return 0;
+    const volScoreStudentPerYear = (h: number) => {
+      const v = Math.max(0, Number(h) || 0);
+      if (v >= 10) return 3;
+      if (v >= 7) return 2;
+      return 1;
+    };
+
+    const volScoreGraduatePerYear = (h: number) => {
+      const v = Math.max(0, Number(h) || 0);
+      if (v >= 15) return 3;
+      if (v >= 10) return 2;
+      return 1;
+    };
+
+    // 재학생/졸업생 구분 없이 동일하게 처리 (학생용 로직 기준)
+    const score1 = volScoreStudentPerYear(vol1Hours);
+    const score2 = volScoreStudentPerYear(vol2Hours);
+    const score3 = volScoreStudentPerYear(vol3Hours);
     
-    // 2024년 이전/이후 구분
-    const before2024 = [vol1Year, vol2Year, vol3Year].filter(year => year < 2024).length;
-    const after2024 = [vol1Year, vol2Year, vol3Year].filter(year => year >= 2024).length;
-    
-    if (before2024 > 0 && after2024 > 0) {
-      // 혼합: 2024년 이전 1.5배, 2024년 이후 1배
-      const beforeHours = (vol1Year < 2024 ? vol1Hours : 0) + (vol2Year < 2024 ? vol2Hours : 0) + (vol3Year < 2024 ? vol3Hours : 0);
-      const afterHours = (vol1Year >= 2024 ? vol1Hours : 0) + (vol2Year >= 2024 ? vol2Hours : 0) + (vol3Year >= 2024 ? vol3Hours : 0);
-      return Math.min(5, (beforeHours * 1.5 + afterHours) / 20);
-    } else if (before2024 > 0) {
-      // 2024년 이전만: 1.5배
-      return Math.min(5, totalHours * 1.5 / 20);
-    } else {
-      // 2024년 이후만: 1배
-      return Math.min(5, totalHours / 20);
-    }
+    return score1 + score2 + score3; // 최대 9점
   };
 
   // 리더십 점수 계산
@@ -244,7 +248,7 @@ export default function TeacherSoftwareCalculator() {
     return Math.min(5, awardsCount);
   };
 
-  // 점수 계산
+  // 점수 계산 (학생용 계산기와 동일한 로직)
   const calculateScore = (student: StudentData) => {
     const { track, atype, subjects, freeSem, gedSubjects, attBySem, vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year, leadership, awardsCount } = student;
     const effectiveCoeffs = calculateEffectiveCoeffs(atype, freeSem);
@@ -254,12 +258,11 @@ export default function TeacherSoftwareCalculator() {
       const pts = gedSubjects.filter((v) => Number.isFinite(v.score)).map((v) => scoreToPointGED(v.score));
       if (pts.length === 0) return { courseScore: 0, attScore: 0, volScore: 0, bonusLeadership: 0, bonusAwards: 0, totalScore: 0 };
       const avg = pts.reduce((a, b) => a + b, 0) / pts.length;
-      const factor = track === "일반전형" ? 8 : 6;
-      const courseScore = round3(avg * factor);
-      const attScore = round3(calculateAttendance(attBySem) * 2);
-      const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year) * 2);
-      const bonusLeadership = round3(calculateLeadership(leadership) * 2);
-      const bonusAwards = round3(calculateAwards(awardsCount) * 2);
+      const courseScore = round3(avg * 20); // 100점 만점
+      const attScore = round3(calculateAttendance(attBySem));
+      const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year));
+      const bonusLeadership = round3(calculateLeadership(leadership));
+      const bonusAwards = round3(calculateAwards(awardsCount));
       const totalScore = round3(courseScore + attScore + volScore + bonusLeadership + bonusAwards);
       return { courseScore, attScore, volScore, bonusLeadership, bonusAwards, totalScore };
     } else {
@@ -270,12 +273,11 @@ export default function TeacherSoftwareCalculator() {
         const { avg } = calculateSemStats(subjects, s.key);
         sum += avg * w;
       }
-      const factor = track === "일반전형" ? 0.4 : 0.3;
-      const courseScore = round3(sum * factor);
-      const attScore = round3(calculateAttendance(attBySem) * 2);
-      const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year) * 2);
-      const bonusLeadership = round3(calculateLeadership(leadership) * 2);
-      const bonusAwards = round3(calculateAwards(awardsCount) * 2);
+      const courseScore = round3(sum); // 100점 만점 (가중합 그대로)
+      const attScore = round3(calculateAttendance(attBySem));
+      const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year));
+      const bonusLeadership = round3(calculateLeadership(leadership));
+      const bonusAwards = round3(calculateAwards(awardsCount));
       const totalScore = round3(courseScore + attScore + volScore + bonusLeadership + bonusAwards);
       return { courseScore, attScore, volScore, bonusLeadership, bonusAwards, totalScore };
     }

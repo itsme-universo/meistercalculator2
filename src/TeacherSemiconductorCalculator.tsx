@@ -200,39 +200,43 @@ export default function TeacherSemiconductorCalculator() {
     return { count: cnt, avg };
   };
 
-  // 출결 점수 계산
+  // 출결 점수 계산 (학생용과 동일한 로직)
   const calculateAttendance = (attBySem: Record<string, number>) => {
-    const totalDays = Object.values(attBySem).reduce((a, b) => a + b, 0);
-    if (totalDays === 0) return 0;
-    const rate = totalDays / (Object.keys(attBySem).length * 100); // 100일 기준
-    if (rate >= 0.95) return 5;
-    if (rate >= 0.90) return 4;
-    if (rate >= 0.85) return 3;
-    if (rate >= 0.80) return 2;
-    return 1;
+    const considered = SEMS.filter((s) => 
+      baseCoeff("재학생", s.key) > 0 || baseCoeff("졸업생", s.key) > 0
+    );
+    let a = 0, l = 0;
+    for (const s of considered) {
+      const att = attBySem[s.key] || 100;
+      const absent = 100 - att; // 출석률에서 결석일수 계산
+      a += Math.max(0, Math.floor(absent / 20)); // 20%당 1일 결석으로 환산
+    }
+    const score = 46 - 6 * a - 2 * l;
+    return Math.max(0, score);
   };
 
-  // 봉사활동 점수 계산
+  // 봉사활동 점수 계산 (학생용과 동일한 로직)
   const calculateVolunteer = (vol1Hours: number, vol2Hours: number, vol3Hours: number, vol1Year: number, vol2Year: number, vol3Year: number) => {
-    const totalHours = vol1Hours + vol2Hours + vol3Hours;
-    if (totalHours === 0) return 0;
+    const volScoreStudentPerYear = (h: number) => {
+      const v = Math.max(0, Number(h) || 0);
+      if (v >= 10) return 3;
+      if (v >= 7) return 2;
+      return 1;
+    };
+
+    const volScoreGraduatePerYear = (h: number) => {
+      const v = Math.max(0, Number(h) || 0);
+      if (v >= 15) return 3;
+      if (v >= 10) return 2;
+      return 1;
+    };
+
+    // 재학생/졸업생 구분 없이 동일하게 처리 (학생용 로직 기준)
+    const score1 = volScoreStudentPerYear(vol1Hours);
+    const score2 = volScoreStudentPerYear(vol2Hours);
+    const score3 = volScoreStudentPerYear(vol3Hours);
     
-    // 2024년 이전/이후 구분
-    const before2024 = [vol1Year, vol2Year, vol3Year].filter(year => year < 2024).length;
-    const after2024 = [vol1Year, vol2Year, vol3Year].filter(year => year >= 2024).length;
-    
-    if (before2024 > 0 && after2024 > 0) {
-      // 혼합: 2024년 이전 1.5배, 2024년 이후 1배
-      const beforeHours = (vol1Year < 2024 ? vol1Hours : 0) + (vol2Year < 2024 ? vol2Hours : 0) + (vol3Year < 2024 ? vol3Hours : 0);
-      const afterHours = (vol1Year >= 2024 ? vol1Hours : 0) + (vol2Year >= 2024 ? vol2Hours : 0) + (vol3Year >= 2024 ? vol3Hours : 0);
-      return Math.min(5, (beforeHours * 1.5 + afterHours) / 20);
-    } else if (before2024 > 0) {
-      // 2024년 이전만: 1.5배
-      return Math.min(5, totalHours * 1.5 / 20);
-    } else {
-      // 2024년 이후만: 1배
-      return Math.min(5, totalHours / 20);
-    }
+    return score1 + score2 + score3; // 최대 9점
   };
 
   // 리더십 점수 계산
@@ -240,9 +244,10 @@ export default function TeacherSemiconductorCalculator() {
     return Math.min(5, leadership);
   };
 
-  // 경력 점수 계산
+  // 직업진로체험 참가 점수 계산
   const calculateCareer = (careerExp: number) => {
-    return Math.min(5, careerExp);
+    // 4회의 체험일 중 1회 이상 참가했으면 3점 (0회면 0점, 1~4회는 전부 3점)
+    return careerExp >= 1 ? 3 : 0;
   };
 
   // 수상실적 점수 계산
@@ -250,7 +255,7 @@ export default function TeacherSemiconductorCalculator() {
     return Math.min(5, awardsCount);
   };
 
-  // 점수 계산
+  // 점수 계산 (학생용 계산기와 동일한 로직)
   const calculateScore = (student: StudentData) => {
     const { track, atype, subjects, freeSem, gedSubjects, attBySem, vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year, leadership, careerExp, awardsCount } = student;
     const effectiveCoeffs = calculateEffectiveCoeffs(atype, freeSem);
@@ -260,13 +265,12 @@ export default function TeacherSemiconductorCalculator() {
       const pts = gedSubjects.filter((v) => Number.isFinite(v.score)).map((v) => scoreToPointGED(v.score));
       if (pts.length === 0) return { courseScore: 0, attScore: 0, volScore: 0, bonusLeadership: 0, bonusCareer: 0, bonusAwards: 0, totalScore: 0 };
       const avg = pts.reduce((a, b) => a + b, 0) / pts.length;
-      const factor = track === "일반전형" ? 8 : 6;
-      const courseScore = round3(avg * factor);
-      const attScore = round3(calculateAttendance(attBySem) * 2);
-      const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year) * 2);
-      const bonusLeadership = round3(calculateLeadership(leadership) * 2);
-      const bonusCareer = round3(calculateCareer(careerExp) * 2);
-      const bonusAwards = round3(calculateAwards(awardsCount) * 2);
+      const courseScore = round3(avg * 20); // 100점 만점
+      const attScore = round3(calculateAttendance(attBySem));
+      const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year));
+      const bonusLeadership = round3(calculateLeadership(leadership));
+      const bonusCareer = round3(calculateCareer(careerExp));
+      const bonusAwards = round3(calculateAwards(awardsCount));
       const totalScore = round3(courseScore + attScore + volScore + bonusLeadership + bonusCareer + bonusAwards);
       return { courseScore, attScore, volScore, bonusLeadership, bonusCareer, bonusAwards, totalScore };
     } else {
@@ -277,13 +281,12 @@ export default function TeacherSemiconductorCalculator() {
         const { avg } = calculateSemStats(subjects, s.key);
         sum += avg * w;
       }
-      const factor = track === "일반전형" ? 0.4 : 0.3;
-      const courseScore = round3(sum * factor);
-      const attScore = round3(calculateAttendance(attBySem) * 2);
-      const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year) * 2);
-      const bonusLeadership = round3(calculateLeadership(leadership) * 2);
-      const bonusCareer = round3(calculateCareer(careerExp) * 2);
-      const bonusAwards = round3(calculateAwards(awardsCount) * 2);
+      const courseScore = round3(sum); // 100점 만점 (가중합 그대로)
+      const attScore = round3(calculateAttendance(attBySem));
+      const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year));
+      const bonusLeadership = round3(calculateLeadership(leadership));
+      const bonusCareer = round3(calculateCareer(careerExp));
+      const bonusAwards = round3(calculateAwards(awardsCount));
       const totalScore = round3(courseScore + attScore + volScore + bonusLeadership + bonusCareer + bonusAwards);
       return { courseScore, attScore, volScore, bonusLeadership, bonusCareer, bonusAwards, totalScore };
     }
@@ -353,7 +356,7 @@ export default function TeacherSemiconductorCalculator() {
         String(h).includes("리더십")
       );
       const careerIdx = headers.findIndex((h: any) => 
-        String(h).includes("경력")
+        String(h).includes("직업진로체험") || String(h).includes("경력")
       );
       const awardsIdx = headers.findIndex((h: any) => 
         String(h).includes("수상") || String(h).includes("상")
@@ -521,7 +524,7 @@ export default function TeacherSemiconductorCalculator() {
         if (late2Idx >= 0) attBySem["2-1"] = Math.max(0, attBySem["2-1"] - (Number(firstRow[late2Idx]) || 0));
         if (late3Idx >= 0) attBySem["3-1"] = Math.max(0, attBySem["3-1"] - (Number(firstRow[late3Idx]) || 0));
 
-        // 리더십, 경력, 수상 데이터 추출
+        // 리더십, 직업진로체험 참가, 수상 데이터 추출
         const leadership = leadershipIdx >= 0 ? Number(firstRow[leadershipIdx]) || 0 : 0;
         const careerExp = careerIdx >= 0 ? Number(firstRow[careerIdx]) || 0 : 0;
         const awardsCount = awardsIdx >= 0 ? Number(firstRow[awardsIdx]) || 0 : 0;
@@ -578,7 +581,7 @@ export default function TeacherSemiconductorCalculator() {
 
     // 헤더 설정
     const headers = [
-      "이름", "전형", "지원유형", "교과성적", "출결점수", "봉사점수", "리더십점수", "경력점수", "수상점수", "총점", "유효성"
+      "이름", "전형", "지원유형", "교과성적", "출결점수", "봉사점수", "리더십점수", "직업진로체험 참가", "수상점수", "총점", "유효성"
     ];
     worksheet.addRow(headers);
 
@@ -643,7 +646,7 @@ export default function TeacherSemiconductorCalculator() {
       "1학년 봉사활동 시간", "2학년 봉사활동 시간", "3학년 봉사활동 시간",
       "1학년 미인정 결석", "2학년 미인정 결석", "3학년 미인정 결석",
       "1학년 지각·조퇴", "2학년 지각·조퇴", "3학년 지각·조퇴",
-      "리더십", "경력", "수상실적"
+      "리더십", "직업진로체험 참가", "수상실적"
     ];
     worksheet.addRow(headers);
 
@@ -710,7 +713,7 @@ A`;
 
     // 샘플 데이터 (멀티라인 형식)
     const sampleData = [
-      ["00000-00001", "홍길동", "일반전형", "재학생", multilineSubjectData, multilineGradeData, "2021년-10시간", "2022년-8시간", "2023년-12시간", "2", "1", "0", "2", "3", "1", "3", "2", "1"],
+      ["00000-00001", "홍길동", "일반전형", "재학생", multilineSubjectData, multilineGradeData, "2021년-10시간", "2022년-8시간", "2023년-12시간", "2", "3", "0", "2", "3", "1", "3", "2", "1"],
       ["00000-00002", "김철수", "특별전형", "졸업생", multilineSubjectData2, multilineGradeData2, "2020년-15시간", "2021년-12시간", "2022년-10시간", "1", "0", "1", "1", "2", "0", "4", "3", "2"],
       ["00000-00003", "이영희", "일반전형", "검정고시", gedSubjectData, gedGradeData, "", "", "", "", "", "", "", "", "", "2", "1", "0"]
     ];
@@ -905,7 +908,7 @@ A`;
                   <th>출결점수</th>
                   <th>봉사점수</th>
                   <th>리더십점수</th>
-                  <th>경력점수</th>
+                  <th>직업진로체험 참가</th>
                   <th>수상점수</th>
                   <th>총점</th>
                   <th>유효성</th>
