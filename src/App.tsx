@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import MainGatePage from "./MainGatePage";
 import GatePage from "./GatePage";
 import TeacherGatePage from "./TeacherGatePage";

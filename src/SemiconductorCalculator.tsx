@@ -1,5 +1,4 @@
 import React, { useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 
@@ -72,8 +71,11 @@ type StdSubj = {
 
 const BANNED_SUBJECT_KEYWORDS = ["음악", "미술", "체육"];
 
-export default function SemiconductorCalculator() {
-  const navigate = useNavigate();
+interface SemiconductorCalculatorProps {
+  onBack?: () => void;
+}
+
+export default function SemiconductorCalculator({ onBack }: SemiconductorCalculatorProps) {
   const [atype, setAtype] = useState<ApplicantType>("재학생");
 
   // 재학생/졸업생: 학기별 과목 리스트(동적)
@@ -704,6 +706,10 @@ export default function SemiconductorCalculator() {
         input[type="radio"], input[type="checkbox"]{ accent-color:#22c55e }
       `}</style>
 
+      <button className="btn" onClick={onBack || (() => window.history.back())} style={{ marginBottom: "20px" }}>
+        ← 목록으로
+      </button>
+
       <h1>대구반도체마이스터고 1차 전형 성적 계산기</h1>
       <div className="muted" style={{ margin: "10px 0" }}>
         • 본 계산기는 <b>1차 전형</b>만 대상으로 합니다. (2차 전형의
@@ -802,6 +808,14 @@ export default function SemiconductorCalculator() {
                         }}
                       >
                         <strong>학기: {sem.key}</strong>
+                        <span className="badge-muted">
+                          실효 가중치 ×{round3(effectiveWeights[sem.key])}
+                        </span>
+                      </div>
+                      <div className="badge-muted" style={{ marginTop: 4 }}>
+                        반영 과목수(가중): <b>{round3(weightedCount)}</b> (행{" "}
+                        {includedRowCount}개) · 평균 미리보기:{" "}
+                        <b>{round3(avg).toFixed(3)}</b>
                       </div>
                     </div>
                     <label
@@ -1042,6 +1056,9 @@ export default function SemiconductorCalculator() {
       {atype !== "검정고시" && (
         <section className="card" style={{ marginBottom: 16 }}>
           <h3>출결</h3>
+          <div className="muted">
+            산식: 46 – (미인정 결석×6) – (미인정 지각/조퇴/결과×2) · 최저 0점
+          </div>
 
           {[1, 2, 3].map((year) => (
             <div key={year} className="year-block">
@@ -1214,6 +1231,11 @@ export default function SemiconductorCalculator() {
                   />
                 </div>
               </div>
+              <div className="muted" style={{ marginTop: 6 }}>
+                재학생: 실행년도 입력은 기록용이며{" "}
+                <b>점수 계산에는 사용하지 않습니다</b>. 졸업생: 실행년도에 따라
+                점수 기준이 달라집니다.
+              </div>
             </div>
           </div>
 
@@ -1248,6 +1270,10 @@ export default function SemiconductorCalculator() {
                   );
                 })}
               </div>
+              <div className="muted" style={{ marginTop: 6 }}>
+                전교 학생회장·부회장·학급반장만 인정(부반장 제외).{" "}
+                <b>학기 전체</b> 수행 시 학기당 2점, 최대 6점.
+              </div>
             </div>
 
             <div className="card">
@@ -1264,6 +1290,9 @@ export default function SemiconductorCalculator() {
                 />
                 본교 반도체 8대공정 체험/견학 <b>1회 이상 참여(3점)</b>
               </label>
+              <div className="muted" style={{ margin: "4px 0 10px" }}>
+                (예: 6/27, 9/5, 9/19, 10/17 중 1회 이상)
+              </div>
 
               <label className="badge-muted">
                 모범상 수상 횟수 (0~3회, 1회당 2점)
@@ -1277,6 +1306,9 @@ export default function SemiconductorCalculator() {
                 value={awardsCount}
                 onChange={(e) => setAwardsCount(Number(e.target.value))}
               />
+              <div className="muted" style={{ marginTop: 6 }}>
+                모범/선행/효행/공로/노력상 등 <b>교내</b> 수상만 인정, 최대 6점.
+              </div>
             </div>
           </div>
         </section>
