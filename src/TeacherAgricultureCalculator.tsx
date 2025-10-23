@@ -328,28 +328,6 @@ export default function TeacherAgricultureCalculator() {
           freeSem[s.key] = false;
         }
 
-        // 자유학기 정보 추출 (엑셀에서 자유학기 컬럼이 있다면)
-        const freeSemIdx = headers.findIndex((h: any) => 
-          String(h).includes("자유학기") || String(h).includes("자유")
-        );
-        
-        console.log('자유학기 컬럼 인덱스:', freeSemIdx);
-        
-        if (freeSemIdx !== -1) {
-          const freeSemData = String(firstRow[freeSemIdx] || "").trim();
-          console.log('자유학기 데이터:', freeSemData);
-          if (freeSemData) {
-            // "1-1,2-1" 형식으로 파싱
-            const freeSemKeys = freeSemData.split(",").map(s => s.trim());
-            for (const key of freeSemKeys) {
-              if (SEMS.some(s => s.key === key)) {
-                freeSem[key] = true;
-                console.log(`자유학기 설정: ${key}`);
-              }
-            }
-          }
-        }
-
         const gedSubjects: { subject: string; score: number }[] = [];
 
         // 과목 데이터 추출 - 멀티라인 지원
@@ -405,8 +383,20 @@ export default function TeacherAgricultureCalculator() {
               console.log(`파싱: "${subjectInfo}" -> 학기: "${semInfo.trim()}" -> "${semKey}", 과목: "${subjectName.trim()}", 등급: "${grade}"`);
               
               if (SEMS.some(s => s.key === semKey)) {
-                subjects[semKey].push({ name: subjectName.trim(), grade: grade });
-                console.log(`과목 추가됨: ${semKey}에 ${subjectName.trim()} (${grade})`);
+                // 자유학기 체크: 과목명이 "자유학기" 또는 성적이 "자유학기"/"자유학기제"
+                const isFreeSemester = 
+                  subjectName.trim() === "자유학기" || 
+                  subjectName.trim() === "자유학기제" ||
+                  grade.trim() === "자유학기" || 
+                  grade.trim() === "자유학기제";
+                
+                if (isFreeSemester) {
+                  freeSem[semKey] = true;
+                  console.log(`자유학기 설정: ${semKey}`);
+                } else {
+                  subjects[semKey].push({ name: subjectName.trim(), grade: grade });
+                  console.log(`과목 추가됨: ${semKey}에 ${subjectName.trim()} (${grade})`);
+                }
               } else {
                 console.log(`과목 추가 실패: ${semKey} (유효하지 않은 학기)`);
               }
@@ -511,7 +501,7 @@ export default function TeacherAgricultureCalculator() {
     // 헤더 설정
     const headers = [
       "수험번호", "이름", "전형", "지원유형", 
-      "중학교-학기/과목", "중학교-성적", "자유학기"
+      "중학교-학기/과목", "중학교-성적"
     ];
     worksheet.addRow(headers);
 
@@ -576,11 +566,48 @@ A`;
 88
 92`;
 
+    // 자유학기 포함 샘플 데이터
+    const multilineSubjectDataWithFree = `1학년1학기|국어
+1학년1학기|영어
+1학년1학기|수학
+1학년1학기|과학
+1학년2학기|자유학기
+2학년1학기|국어
+2학년1학기|영어
+2학년1학기|수학
+2학년1학기|과학
+2학년2학기|국어
+2학년2학기|영어
+2학년2학기|수학
+2학년2학기|과학
+3학년1학기|국어
+3학년1학기|영어
+3학년1학기|수학
+3학년1학기|과학`;
+
+    const multilineGradeDataWithFree = `A
+B
+A
+A
+자유학기
+B
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A`;
+
     // 샘플 데이터 (멀티라인 형식)
     const sampleData = [
-      ["00000-00001", "홍길동", "일반전형", "졸업예정자", multilineSubjectData, multilineGradeData, "1-1"],
-      ["00000-00002", "김철수", "특별전형", "졸업생", multilineSubjectData2, multilineGradeData2, ""],
-      ["00000-00003", "이영희", "일반전형", "검정고시", gedSubjectData, gedGradeData, ""]
+      ["00000-00001", "홍길동", "일반전형", "졸업예정자", multilineSubjectData, multilineGradeData],
+      ["00000-00002", "김철수", "특별전형", "졸업생", multilineSubjectDataWithFree, multilineGradeDataWithFree],
+      ["00000-00003", "이영희", "일반전형", "검정고시", gedSubjectData, gedGradeData]
     ];
     
     sampleData.forEach(row => {

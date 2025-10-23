@@ -476,8 +476,19 @@ export default function TeacherIlCalculator() {
               const semKey = convertSemesterFormat(semInfo.trim());
               
               if (SEMS.some(s => s.key === semKey)) {
-                const isMathSci = subjectName.includes("수학") || subjectName.includes("과학");
-                subjects[semKey].push({ name: subjectName.trim(), grade: grade, mathSci: isMathSci });
+                // 자유학기 체크: 과목명이 "자유학기" 또는 성적이 "자유학기"/"자유학기제"
+                const isFreeSemester = 
+                  subjectName.trim() === "자유학기" || 
+                  subjectName.trim() === "자유학기제" ||
+                  grade.trim() === "자유학기" || 
+                  grade.trim() === "자유학기제";
+                
+                if (isFreeSemester) {
+                  freeSem[semKey] = true;
+                } else {
+                  const isMathSci = subjectName.includes("수학") || subjectName.includes("과학");
+                  subjects[semKey].push({ name: subjectName.trim(), grade: grade, mathSci: isMathSci });
+                }
               }
             }
           }
@@ -669,10 +680,47 @@ A`;
 88
 92`;
 
+    // 자유학기 포함 샘플 데이터
+    const multilineSubjectDataWithFree = `1학년1학기|국어
+1학년1학기|영어
+1학년1학기|수학
+1학년1학기|과학
+1학년2학기|자유학기
+2학년1학기|국어
+2학년1학기|영어
+2학년1학기|수학
+2학년1학기|과학
+2학년2학기|국어
+2학년2학기|영어
+2학년2학기|수학
+2학년2학기|과학
+3학년1학기|국어
+3학년1학기|영어
+3학년1학기|수학
+3학년1학기|과학`;
+
+    const multilineGradeDataWithFree = `A
+B
+A
+A
+자유학기
+B
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A`;
+
     // 샘플 데이터 (멀티라인 형식)
     const sampleData = [
       ["00000-00001", "홍길동", "일반전형", "졸업예정자", multilineSubjectData, multilineGradeData, "2", "1", "0", "2", "3", "1"],
-      ["00000-00002", "김철수", "특별전형", "졸업생", multilineSubjectData2, multilineGradeData2, "1", "0", "1", "1", "2", "0"],
+      ["00000-00002", "김철수", "특별전형", "졸업생", multilineSubjectDataWithFree, multilineGradeDataWithFree, "1", "0", "1", "1", "2", "0"],
       ["00000-00003", "이영희", "일반전형", "검정고시", gedSubjectData, gedGradeData, "", "", "", "", "", ""]
     ];
     
