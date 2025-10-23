@@ -164,13 +164,10 @@ export default function SoftwareCalculator() {
     return init;
   });
 
-  // 봉사 시간(학년별) 및 실행년도
+  // 봉사 시간(학년별)
   const [vol1, setVol1] = useState<number>(0);
   const [vol2, setVol2] = useState<number>(0);
   const [vol3, setVol3] = useState<number>(0);
-  const [vol1Year, setVol1Year] = useState<string>("2024");
-  const [vol2Year, setVol2Year] = useState<string>("2024");
-  const [vol3Year, setVol3Year] = useState<string>("2024");
 
   // 엑셀 업로드
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -320,29 +317,26 @@ export default function SoftwareCalculator() {
   };
 
   // ---------- 봉사(6점) ----------
-  const perYearVolunteer = (h: number, year: string) => {
+  const perYearVolunteer = (h: number) => {
     const v = Math.max(0, Number(h) || 0);
-    const y = Number(year) || 2024;
-    const isRecent = y >= 2024; // 2024년 이후
-    if (v >= 10) return isRecent ? 2.0 : 1.0;
-    if (v >= 7) return isRecent ? 1.6 : 0.8;
-    return isRecent ? 1.2 : 0.6; // <7 (0시간 포함)
+    if (v >= 10) return 2.0;
+    if (v >= 7) return 1.6;
+    return 1.2; // <7 (0시간 포함)
   };
   const calcVolunteer = () => {
-    const total =
-      perYearVolunteer(vol1, vol1Year) + perYearVolunteer(vol2, vol2Year) + perYearVolunteer(vol3, vol3Year);
+    const total = perYearVolunteer(vol1) + perYearVolunteer(vol2) + perYearVolunteer(vol3);
     return Math.min(6, total);
   };
 
   // ---------- 가산점(리더십/모범상) ----------
   const calcLeadership = () => {
-    // 학기 체크 수 × 2점이 원칙이나, 본 계산기 총점 설계상 최대 2점으로 캡
+    // 학기당 0.5점, 최대 2점
     let cnt = 0;
     for (const sem of SEMS) {
       const active = atype === "재학생" ? sem.key !== "3-2" : true; // 재학생은 3-2 미인정
       if (leadership[sem.key] && active) cnt += 1;
     }
-    return Math.min(2, cnt * 2); // 최대 2점
+    return Math.min(2, cnt * 0.5); // 학기당 0.5점, 최대 2점
   };
   const calcAwards = () => Math.min(2, Math.max(0, Math.floor(awardsCount))); // 1회 1점, 최대 2
 
@@ -390,9 +384,6 @@ export default function SoftwareCalculator() {
     vol1,
     vol2,
     vol3,
-    vol1Year,
-    vol2Year,
-    vol3Year,
     leadership,
     awardsCount,
     effectiveWeights,
@@ -976,17 +967,6 @@ export default function SoftwareCalculator() {
                     value={vol1}
                     onChange={(e) => setVol1(Number(e.target.value))}
                   />
-                  <div className="muted" style={{ marginTop: 4, marginBottom: 6 }}>
-                    실행년도
-                  </div>
-                  <input
-                    className="ui-input"
-                    type="number"
-                    min={2020}
-                    max={2025}
-                    value={vol1Year}
-                    onChange={(e) => setVol1Year(e.target.value)}
-                  />
                 </div>
                 <div style={{ flex: 1, minWidth: 120 }}>
                   <div className="muted" style={{ marginBottom: 6 }}>
@@ -1000,17 +980,6 @@ export default function SoftwareCalculator() {
                     value={vol2}
                     onChange={(e) => setVol2(Number(e.target.value))}
                   />
-                  <div className="muted" style={{ marginTop: 4, marginBottom: 6 }}>
-                    실행년도
-                  </div>
-                  <input
-                    className="ui-input"
-                    type="number"
-                    min={2020}
-                    max={2025}
-                    value={vol2Year}
-                    onChange={(e) => setVol2Year(e.target.value)}
-                  />
                 </div>
                 <div style={{ flex: 1, minWidth: 120 }}>
                   <div className="muted" style={{ marginBottom: 6 }}>
@@ -1023,17 +992,6 @@ export default function SoftwareCalculator() {
                     step={0.5}
                     value={vol3}
                     onChange={(e) => setVol3(Number(e.target.value))}
-                  />
-                  <div className="muted" style={{ marginTop: 4, marginBottom: 6 }}>
-                    실행년도
-                  </div>
-                  <input
-                    className="ui-input"
-                    type="number"
-                    min={2020}
-                    max={2025}
-                    value={vol3Year}
-                    onChange={(e) => setVol3Year(e.target.value)}
                   />
                 </div>
               </div>

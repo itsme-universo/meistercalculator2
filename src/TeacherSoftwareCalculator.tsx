@@ -92,9 +92,6 @@ interface StudentData {
   vol1Hours: number;
   vol2Hours: number;
   vol3Hours: number;
-  vol1Year: number;
-  vol2Year: number;
-  vol3Year: number;
   leadership: number;
   awardsCount: number;
 }
@@ -220,33 +217,22 @@ export default function TeacherSoftwareCalculator() {
   };
 
   // 봉사활동 점수 계산 (학생용과 동일한 로직)
-  const calculateVolunteer = (vol1Hours: number, vol2Hours: number, vol3Hours: number, vol1Year: number, vol2Year: number, vol3Year: number) => {
-    const volScoreStudentPerYear = (h: number) => {
+  const calculateVolunteer = (vol1Hours: number, vol2Hours: number, vol3Hours: number) => {
+    const perYearVolunteer = (h: number) => {
       const v = Math.max(0, Number(h) || 0);
-      if (v >= 10) return 3;
-      if (v >= 7) return 2;
-      return 1;
+      if (v >= 10) return 2.0;
+      if (v >= 7) return 1.6;
+      return 1.2; // <7 (0시간 포함)
     };
 
-    const volScoreGraduatePerYear = (h: number) => {
-      const v = Math.max(0, Number(h) || 0);
-      if (v >= 15) return 3;
-      if (v >= 10) return 2;
-      return 1;
-    };
-
-    // 재학생/졸업생 구분 없이 동일하게 처리 (학생용 로직 기준)
-    const score1 = volScoreStudentPerYear(vol1Hours);
-    const score2 = volScoreStudentPerYear(vol2Hours);
-    const score3 = volScoreStudentPerYear(vol3Hours);
-    
-    return score1 + score2 + score3; // 최대 9점
+    const total = perYearVolunteer(vol1Hours) + perYearVolunteer(vol2Hours) + perYearVolunteer(vol3Hours);
+    return Math.min(6, total); // 최대 6점
   };
 
   // 리더십 점수 계산 (학생용과 동일한 로직)
   const calculateLeadership = (leadership: number) => {
-    // 소프트웨어마이스터고: 1회당 2점, 최대 2점
-    return Math.min(2, leadership * 2);
+    // 소프트웨어마이스터고: 학기당 0.5점, 최대 2점
+    return Math.min(2, leadership * 0.5);
   };
 
   // 수상실적 점수 계산 (학생용과 동일한 로직)
@@ -257,7 +243,7 @@ export default function TeacherSoftwareCalculator() {
 
   // 점수 계산 (학생용 계산기와 동일한 로직)
   const calculateScore = (student: StudentData) => {
-    const { track, atype, subjects, freeSem, gedSubjects, attBySem, vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year, leadership, awardsCount } = student;
+    const { track, atype, subjects, freeSem, gedSubjects, attBySem, vol1Hours, vol2Hours, vol3Hours, leadership, awardsCount } = student;
     const effectiveCoeffs = calculateEffectiveCoeffs(atype, freeSem);
 
     if (atype === "검정고시") {
@@ -284,7 +270,7 @@ export default function TeacherSoftwareCalculator() {
       // 소프트웨어마이스터고: 재학생/졸업생 교과 80점 만점
       const courseScore = round3(sum * 0.8); // 80점 만점 (가중합 * 0.8)
       const attScore = round3(calculateAttendance(attBySem));
-      const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year));
+      const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours));
       const bonusLeadership = round3(calculateLeadership(leadership));
       const bonusAwards = round3(calculateAwards(awardsCount));
       const totalScore = round3(courseScore + attScore + volScore + bonusLeadership + bonusAwards);
@@ -326,13 +312,13 @@ export default function TeacherSoftwareCalculator() {
         String(h).includes("성적") || String(h).includes("등급") || String(h).includes("grade")
       );
       const vol1Idx = headers.findIndex((h: any) => 
-        String(h).includes("1학년 봉사") || String(h).includes("1학년")
+        String(h).includes("1학년") && String(h).includes("봉사")
       );
       const vol2Idx = headers.findIndex((h: any) => 
-        String(h).includes("2학년 봉사") || String(h).includes("2학년")
+        String(h).includes("2학년") && String(h).includes("봉사")
       );
       const vol3Idx = headers.findIndex((h: any) => 
-        String(h).includes("3학년 봉사") || String(h).includes("3학년")
+        String(h).includes("3학년") && String(h).includes("봉사")
       );
       const att1Idx = headers.findIndex((h: any) => 
         String(h).includes("1학년 미인정") || String(h).includes("1학년 결석")
@@ -482,33 +468,17 @@ export default function TeacherSoftwareCalculator() {
           }
         }
 
-        // 봉사활동 데이터 추출
+        // 봉사활동 데이터 추출 (시간만)
         let vol1Hours = 0, vol2Hours = 0, vol3Hours = 0;
-        let vol1Year = 2024, vol2Year = 2024, vol3Year = 2024;
 
         if (vol1Idx >= 0) {
-          const vol1Data = String(firstRow[vol1Idx] || "").trim();
-          if (vol1Data.includes("-")) {
-            const [year, hours] = vol1Data.split("-");
-            vol1Year = Number(year.replace("년", "")) || 2024;
-            vol1Hours = Number(hours.replace("시간", "")) || 0;
-          }
+          vol1Hours = Number(firstRow[vol1Idx]) || 0;
         }
         if (vol2Idx >= 0) {
-          const vol2Data = String(firstRow[vol2Idx] || "").trim();
-          if (vol2Data.includes("-")) {
-            const [year, hours] = vol2Data.split("-");
-            vol2Year = Number(year.replace("년", "")) || 2024;
-            vol2Hours = Number(hours.replace("시간", "")) || 0;
-          }
+          vol2Hours = Number(firstRow[vol2Idx]) || 0;
         }
         if (vol3Idx >= 0) {
-          const vol3Data = String(firstRow[vol3Idx] || "").trim();
-          if (vol3Data.includes("-")) {
-            const [year, hours] = vol3Data.split("-");
-            vol3Year = Number(year.replace("년", "")) || 2024;
-            vol3Hours = Number(hours.replace("시간", "")) || 0;
-          }
+          vol3Hours = Number(firstRow[vol3Idx]) || 0;
         }
 
         // 출결 데이터 추출
@@ -537,9 +507,6 @@ export default function TeacherSoftwareCalculator() {
           vol1Hours,
           vol2Hours,
           vol3Hours,
-          vol1Year,
-          vol2Year,
-          vol3Year,
           leadership,
           awardsCount
         };
@@ -627,7 +594,7 @@ export default function TeacherSoftwareCalculator() {
     const headers = [
       "수험번호", "이름", "전형", "지원유형", 
       "중학교-학기/과목", "중학교-성적",
-      "1학년 봉사활동 시간", "2학년 봉사활동 시간", "3학년 봉사활동 시간",
+      "1학년 봉사시간", "2학년 봉사시간", "3학년 봉사시간",
       "1학년 미인정 결석", "2학년 미인정 결석", "3학년 미인정 결석",
       "1학년 지각·조퇴", "2학년 지각·조퇴", "3학년 지각·조퇴",
       "리더십", "수상실적"
@@ -697,8 +664,8 @@ A`;
 
     // 샘플 데이터 (멀티라인 형식)
     const sampleData = [
-      ["00000-00001", "홍길동", "일반전형", "재학생", multilineSubjectData, multilineGradeData, "2021년-10시간", "2022년-8시간", "2023년-12시간", "2", "1", "0", "2", "3", "1", "3", "1"],
-      ["00000-00002", "김철수", "특별전형", "졸업생", multilineSubjectData2, multilineGradeData2, "2020년-15시간", "2021년-12시간", "2022년-10시간", "1", "0", "1", "1", "2", "0", "4", "2"],
+      ["00000-00001", "홍길동", "일반전형", "재학생", multilineSubjectData, multilineGradeData, "10", "8", "12", "2", "1", "0", "2", "3", "1", "3", "1"],
+      ["00000-00002", "김철수", "특별전형", "졸업생", multilineSubjectData2, multilineGradeData2, "15", "12", "10", "1", "0", "1", "1", "2", "0", "4", "2"],
       ["00000-00003", "이영희", "일반전형", "검정고시", gedSubjectData, gedGradeData, "", "", "", "", "", "", "", "", "", "2", "0"]
     ];
     
