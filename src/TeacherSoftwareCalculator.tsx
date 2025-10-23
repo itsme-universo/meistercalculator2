@@ -81,6 +81,7 @@ function convertSemesterFormat(semesterStr: string) {
 type SubjRow = { name: string; grade: string; mathSci: boolean };
 
 interface StudentData {
+  examNumber: string;
   name: string;
   track: TrackType;
   atype: ApplicantType;
@@ -525,6 +526,7 @@ export default function TeacherSoftwareCalculator() {
         const awardsCount = awardsIdx >= 0 ? Number(firstRow[awardsIdx]) || 0 : 0;
 
         const student: StudentData = {
+          examNumber: examNumber,
           name: name,
           track,
           atype,
@@ -575,13 +577,14 @@ export default function TeacherSoftwareCalculator() {
 
     // 헤더 설정
     const headers = [
-      "이름", "전형", "지원유형", "교과성적", "출결점수", "봉사점수", "리더십점수", "수상점수", "총점", "유효성"
+      "수험번호", "이름", "전형", "지원유형", "교과성적", "출결점수", "봉사점수", "리더십점수", "수상점수", "총점", "유효성"
     ];
     worksheet.addRow(headers);
 
     // 데이터 추가
     resultData.forEach(student => {
       worksheet.addRow([
+        student.examNumber,
         student.name,
         student.track,
         student.atype,
@@ -873,6 +876,7 @@ A`;
             <table className="result-table">
               <thead>
                 <tr>
+                  <th>수험번호</th>
                   <th>이름</th>
                   <th>전형</th>
                   <th>지원유형</th>
@@ -888,6 +892,7 @@ A`;
               <tbody>
                 {resultData.map((student, index) => (
                   <tr key={index}>
+                    <td>{student.examNumber}</td>
                     <td>{student.name}</td>
                     <td>{student.track}</td>
                     <td>{student.atype}</td>

@@ -81,6 +81,7 @@ function convertSemesterFormat(semesterStr: string) {
 type SubjRow = { name: string; grade: string };
 
 interface StudentData {
+  examNumber: string;
   name: string;
   track: TrackType;
   atype: ApplicantType;
@@ -416,6 +417,7 @@ export default function TeacherAgricultureCalculator() {
         }
 
         const student: StudentData = {
+          examNumber: examNumber,
           name: name,
           track,
           atype,
@@ -457,13 +459,14 @@ export default function TeacherAgricultureCalculator() {
 
     // 헤더 설정
     const headers = [
-      "이름", "전형", "지원유형", "교과성적", "총점", "유효성"
+      "수험번호", "이름", "전형", "지원유형", "교과성적", "총점", "유효성"
     ];
     worksheet.addRow(headers);
 
     // 데이터 추가
     resultData.forEach(student => {
       worksheet.addRow([
+        student.examNumber,
         student.name,
         student.track,
         student.atype,
@@ -757,6 +760,7 @@ A`;
             <table className="result-table">
               <thead>
                 <tr>
+                  <th>수험번호</th>
                   <th>이름</th>
                   <th>전형</th>
                   <th>지원유형</th>
@@ -768,6 +772,7 @@ A`;
               <tbody>
                 {resultData.map((student, index) => (
                   <tr key={index}>
+                    <td>{student.examNumber}</td>
                     <td>{student.name}</td>
                     <td>{student.track}</td>
                     <td>{student.atype}</td>
