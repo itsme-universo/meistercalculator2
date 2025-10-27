@@ -118,7 +118,7 @@ export default function TeacherAgricultureCalculator() {
     if (atype !== "검정고시") {
       // 규칙2: 학년 내 한 학기만 자유 → 다른 학기에 연간 합계 몰아주기
       for (const year of [1, 2, 3]) {
-        const yearSems = SEMS.filter((s) => s.year === year);
+        const yearSems = SEMS.filter((s) => s.year === year && baseCoeff(atype, s.key) > 0);
         if (yearSems.length === 0) continue;
         const baseYearTotal = yearSems.reduce((a, s) => a + baseCoeff(atype, s.key), 0);
         const marked = yearSems.filter((s) => freeSem[s.key]).length;
@@ -140,7 +140,7 @@ export default function TeacherAgricultureCalculator() {
       // 규칙3: 학년 전체 자유 → 차상학년 이관
       const addToYear = (targetYear: number, add: number) => {
         if (add <= 0) return;
-        const tSems = SEMS.filter((s) => s.year === targetYear);
+        const tSems = SEMS.filter((s) => s.year === targetYear && baseCoeff(atype, s.key) > 0);
         if (tSems.length === 0) return;
         const currentTotal = tSems.reduce((a, s) => a + eff[s.key], 0);
         if (currentTotal > 0) {
@@ -158,9 +158,9 @@ export default function TeacherAgricultureCalculator() {
       };
 
       const yearEffTotal = (y: number) =>
-        SEMS.filter((s) => s.year === y).reduce((a, s) => a + eff[s.key], 0);
+        SEMS.filter((s) => s.year === y && baseCoeff(atype, s.key) > 0).reduce((a, s) => a + eff[s.key], 0);
       const yearBaseTotal = (y: number) =>
-        SEMS.filter((s) => s.year === y).reduce((a, s) => a + baseCoeff(atype, s.key), 0);
+        SEMS.filter((s) => s.year === y && baseCoeff(atype, s.key) > 0).reduce((a, s) => a + baseCoeff(atype, s.key), 0);
 
       if (yearEffTotal(1) === 0 && yearBaseTotal(1) > 0) addToYear(2, yearBaseTotal(1));
       if (yearEffTotal(2) === 0 && yearBaseTotal(2) > 0) addToYear(1, yearBaseTotal(2));

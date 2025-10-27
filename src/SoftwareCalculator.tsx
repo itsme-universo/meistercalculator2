@@ -192,7 +192,7 @@ export default function SoftwareCalculator() {
       const p = mapGradeToPoint(val);
       if (p == null) continue; // P/F/빈칸 제외
       num += p * sub.w;
-      den += 1; // 과목 수는 1개로 카운트 (점수에만 가중치 적용)
+      den += sub.w; // 과목 수도 가중치 적용 (수학/과학/정보는 2배로 카운트)
     }
     if (den === 0) return 0;
     return num / den; // 1~5

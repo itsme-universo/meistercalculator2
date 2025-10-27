@@ -195,7 +195,7 @@ export default function TeacherSemiconductorCalculator() {
       const p = mapGradeToPoint(r.grade);
       if (p == null) continue;
       const weight = r.mathSci ? 1.5 : 1;
-      num += p * weight; den += 1; cnt += 1; // 과목 수는 1개로 카운트 (점수에만 가중치 적용)
+      num += p * weight; den += weight; cnt += 1; // 과목 수도 가중치 적용 (수학/과학은 1.5배로 카운트)
     }
     const avg = den === 0 ? 0 : num / den;
     return { count: cnt, avg };
