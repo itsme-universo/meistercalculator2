@@ -217,7 +217,7 @@ export default function TeacherSemiconductorCalculator() {
   };
 
   // 봉사활동 점수 계산 (학생용과 동일한 로직)
-  const calculateVolunteer = (vol1Hours: number, vol2Hours: number, vol3Hours: number, vol1Year: number, vol2Year: number, vol3Year: number) => {
+  const calculateVolunteer = (atype: ApplicantType, vol1Hours: number, vol2Hours: number, vol3Hours: number, vol1Year: number, vol2Year: number, vol3Year: number) => {
     const volScoreStudentPerYear = (h: number) => {
       const v = Math.max(0, Number(h) || 0);
       if (v >= 10) return 3;
@@ -225,19 +225,31 @@ export default function TeacherSemiconductorCalculator() {
       return 1;
     };
 
-    const volScoreGraduatePerYear = (h: number) => {
+    const volScoreGraduatePerYear = (h: number, y: number) => {
       const v = Math.max(0, Number(h) || 0);
-      if (v >= 15) return 3;
-      if (v >= 10) return 2;
-      return 1;
+      if (y >= 2023) {
+        if (v >= 10) return 3;
+        if (v >= 7) return 2;
+        return 1;
+      } else if (y >= 2021) {
+        if (v >= 5) return 3;
+        if (v >= 3) return 2;
+        return 1;
+      }
+      return 3; // 2020년 이전
     };
 
-    // 재학생/졸업생 구분 없이 동일하게 처리 (학생용 로직 기준)
-    const score1 = volScoreStudentPerYear(vol1Hours);
-    const score2 = volScoreStudentPerYear(vol2Hours);
-    const score3 = volScoreStudentPerYear(vol3Hours);
-    
-    return score1 + score2 + score3; // 최대 9점
+    if (atype === "재학생") {
+      const score1 = volScoreStudentPerYear(vol1Hours);
+      const score2 = volScoreStudentPerYear(vol2Hours);
+      const score3 = volScoreStudentPerYear(vol3Hours);
+      return Math.min(9, score1 + score2 + score3);
+    } else {
+      const score1 = volScoreGraduatePerYear(vol1Hours, vol1Year);
+      const score2 = volScoreGraduatePerYear(vol2Hours, vol2Year);
+      const score3 = volScoreGraduatePerYear(vol3Hours, vol3Year);
+      return Math.min(9, score1 + score2 + score3);
+    }
   };
 
   // 리더십 점수 계산
@@ -269,7 +281,7 @@ export default function TeacherSemiconductorCalculator() {
       const avg = pts.reduce((a, b) => a + b, 0) / pts.length;
       const courseScore = round3(avg * 20); // 100점 만점
       const attScore = round3(calculateAttendance(attBySem));
-      const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year));
+      const volScore = round3(calculateVolunteer(atype, vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year));
       const bonusLeadership = round3(calculateLeadership(leadership));
       const bonusCareer = round3(calculateCareer(careerExp));
       const bonusAwards = round3(calculateAwards(awardsCount));
@@ -285,7 +297,7 @@ export default function TeacherSemiconductorCalculator() {
       }
       const courseScore = round3(sum); // 100점 만점 (가중합 그대로)
       const attScore = round3(calculateAttendance(attBySem));
-      const volScore = round3(calculateVolunteer(vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year));
+      const volScore = round3(calculateVolunteer(atype, vol1Hours, vol2Hours, vol3Hours, vol1Year, vol2Year, vol3Year));
       const bonusLeadership = round3(calculateLeadership(leadership));
       const bonusCareer = round3(calculateCareer(careerExp));
       const bonusAwards = round3(calculateAwards(awardsCount));
