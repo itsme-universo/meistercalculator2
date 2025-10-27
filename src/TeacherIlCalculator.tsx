@@ -100,7 +100,7 @@ interface StudentData {
   subjects: Record<string, SubjRow[]>;
   freeSem: Record<string, boolean>;
   gedSubjects: { subject: string; score: number }[];
-  attBySem: Record<string, number>;
+  attBySem: Record<string, { absent: number; lateEtc: number }>;
   vol1Hours: number;
   vol2Hours: number;
   vol3Hours: number;
@@ -213,15 +213,15 @@ export default function TeacherIlCalculator() {
   };
 
   // 출결 점수 계산 (학생용과 동일한 로직)
-  const calculateAttendance = (attBySem: Record<string, number>, track: TrackType) => {
+  const calculateAttendance = (attBySem: Record<string, { absent: number; lateEtc: number }>, track: TrackType) => {
     const considered = SEMS.filter((s) => 
       baseCoeff("졸업예정자", s.key, track) > 0 || baseCoeff("졸업생", s.key, track) > 0
     );
     let a = 0, l = 0;
     for (const s of considered) {
-      const att = attBySem[s.key] || 100;
-      const absent = 100 - att; // 출석률에서 결석일수 계산
-      a += Math.max(0, Math.floor(absent / 20)); // 20%당 1일 결석으로 환산
+      const row = attBySem[s.key] || { absent: 0, lateEtc: 0 };
+      a += Math.max(0, Math.floor(row.absent || 0));
+      l += Math.max(0, Math.floor(row.lateEtc || 0));
     }
     // 일마이스터고 출결 로직: 일반전형 40점, 특별전형 50점
     return track === "일반전형"
@@ -415,12 +415,12 @@ export default function TeacherIlCalculator() {
         // 과목 데이터 추출
         const subjects: Record<string, SubjRow[]> = {};
         const freeSem: Record<string, boolean> = {};
-        const attBySem: Record<string, number> = {};
+        const attBySem: Record<string, { absent: number; lateEtc: number }> = {};
         
         for (const s of SEMS) {
           subjects[s.key] = [];
           freeSem[s.key] = false;
-          attBySem[s.key] = 100; // 기본값
+          attBySem[s.key] = { absent: 0, lateEtc: 0 }; // 기본값
         }
 
         const gedSubjects: { subject: string; score: number }[] = [];
@@ -495,14 +495,14 @@ export default function TeacherIlCalculator() {
         }
 
         // 출결 데이터 추출
-        if (att1Idx >= 0) attBySem["1-1"] = 100 - (Number(firstRow[att1Idx]) || 0);
-        if (att2Idx >= 0) attBySem["2-1"] = 100 - (Number(firstRow[att2Idx]) || 0);
-        if (att3Idx >= 0) attBySem["3-1"] = 100 - (Number(firstRow[att3Idx]) || 0);
+        if (att1Idx >= 0) attBySem["1-1"].absent = Number(firstRow[att1Idx]) || 0;
+        if (att2Idx >= 0) attBySem["2-1"].absent = Number(firstRow[att2Idx]) || 0;
+        if (att3Idx >= 0) attBySem["3-1"].absent = Number(firstRow[att3Idx]) || 0;
 
         // 지각/조퇴 데이터 추출
-        if (late1Idx >= 0) attBySem["1-1"] = Math.max(0, attBySem["1-1"] - (Number(firstRow[late1Idx]) || 0));
-        if (late2Idx >= 0) attBySem["2-1"] = Math.max(0, attBySem["2-1"] - (Number(firstRow[late2Idx]) || 0));
-        if (late3Idx >= 0) attBySem["3-1"] = Math.max(0, attBySem["3-1"] - (Number(firstRow[late3Idx]) || 0));
+        if (late1Idx >= 0) attBySem["1-1"].lateEtc = Number(firstRow[late1Idx]) || 0;
+        if (late2Idx >= 0) attBySem["2-1"].lateEtc = Number(firstRow[late2Idx]) || 0;
+        if (late3Idx >= 0) attBySem["3-1"].lateEtc = Number(firstRow[late3Idx]) || 0;
 
         const student: StudentData = {
           examNumber: examNumber,
