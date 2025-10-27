@@ -259,9 +259,44 @@ export default function TeacherSoftwareCalculator() {
       const totalScore = round3(courseScore + attScore + volScore + bonusLeadership + bonusAwards);
       return { courseScore, attScore, volScore, bonusLeadership, bonusAwards, totalScore };
     } else {
+      // 실제 과목이 있는 학기 찾기
+      const semsWithSubjects: string[] = [];
+      for (const s of SEMS) {
+        const { count } = calculateSemStats(subjects, s.key);
+        if (count > 0) {
+          semsWithSubjects.push(s.key);
+        }
+      }
+
+      // 과목이 있는 학기에만 계수 재분배
+      const finalCoeffs: Record<string, number> = {};
+      if (semsWithSubjects.length > 0) {
+        // 과목이 있는 학기들의 원래 계수 합계
+        let totalCoeffWithSubjects = 0;
+        for (const semKey of semsWithSubjects) {
+          totalCoeffWithSubjects += effectiveCoeffs[semKey];
+        }
+
+        // 계수 총합 20을 과목이 있는 학기에만 비례 분배
+        const targetSum = 20;
+        for (const s of SEMS) {
+          if (semsWithSubjects.includes(s.key)) {
+            const ratio = effectiveCoeffs[s.key] / totalCoeffWithSubjects;
+            finalCoeffs[s.key] = targetSum * ratio;
+          } else {
+            finalCoeffs[s.key] = 0;
+          }
+        }
+      } else {
+        // 과목이 하나도 없으면 원래 계수 사용
+        for (const s of SEMS) {
+          finalCoeffs[s.key] = effectiveCoeffs[s.key];
+        }
+      }
+
       let sum = 0;
       for (const s of SEMS) {
-        const w = effectiveCoeffs[s.key];
+        const w = finalCoeffs[s.key];
         if (w <= 0) continue;
         const { avg } = calculateSemStats(subjects, s.key);
         sum += avg * w;

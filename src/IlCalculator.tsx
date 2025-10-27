@@ -375,9 +375,44 @@ export default function IlCalculator() {
 
   // 교과 점수
   const calcCourseScoreRegular = () => {
+    // 실제 과목이 있는 학기 찾기
+    const semsWithSubjects: string[] = [];
+    for (const s of SEMS) {
+      const { count } = semStats(s.key);
+      if (count > 0) {
+        semsWithSubjects.push(s.key);
+      }
+    }
+
+    // 과목이 있는 학기에만 계수 재분배
+    const finalWeights: Record<string, number> = {};
+    if (semsWithSubjects.length > 0) {
+      // 과목이 있는 학기들의 원래 계수 합계
+      let totalWeightWithSubjects = 0;
+      for (const semKey of semsWithSubjects) {
+        totalWeightWithSubjects += effectiveWeights[semKey];
+      }
+
+      // 계수 총합을 과목이 있는 학기에만 비례 분배 (일반전형 12, 특별전형 10)
+      const targetSum = track === "일반전형" ? 12 : 10;
+      for (const s of SEMS) {
+        if (semsWithSubjects.includes(s.key)) {
+          const ratio = effectiveWeights[s.key] / totalWeightWithSubjects;
+          finalWeights[s.key] = targetSum * ratio;
+        } else {
+          finalWeights[s.key] = 0;
+        }
+      }
+    } else {
+      // 과목이 하나도 없으면 원래 계수 사용
+      for (const s of SEMS) {
+        finalWeights[s.key] = effectiveWeights[s.key];
+      }
+    }
+
     let sum = 0;
     for (const s of SEMS) {
-      const w = effectiveWeights[s.key];
+      const w = finalWeights[s.key];
       if (w <= 0) continue;
       const { avg } = semStats(s.key);
       sum += avg * w;

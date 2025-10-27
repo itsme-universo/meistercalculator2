@@ -336,9 +336,44 @@ export default function SemiconductorCalculator({ onBack }: SemiconductorCalcula
 
   // 교과 점수 계산
   const calcCourseScoreRegular = () => {
+    // 실제 과목이 있는 학기 찾기
+    const semsWithSubjects: string[] = [];
+    for (const sem of SEMS) {
+      const { includedRowCount } = semStats(sem.key);
+      if (includedRowCount > 0) {
+        semsWithSubjects.push(sem.key);
+      }
+    }
+
+    // 과목이 있는 학기에만 계수 재분배
+    const finalWeights: Record<string, number> = {};
+    if (semsWithSubjects.length > 0) {
+      // 과목이 있는 학기들의 원래 계수 합계
+      let totalWeightWithSubjects = 0;
+      for (const semKey of semsWithSubjects) {
+        totalWeightWithSubjects += effectiveWeights[semKey];
+      }
+
+      // 계수 총합 20을 과목이 있는 학기에만 비례 분배
+      const targetSum = 20;
+      for (const sem of SEMS) {
+        if (semsWithSubjects.includes(sem.key)) {
+          const ratio = effectiveWeights[sem.key] / totalWeightWithSubjects;
+          finalWeights[sem.key] = targetSum * ratio;
+        } else {
+          finalWeights[sem.key] = 0;
+        }
+      }
+    } else {
+      // 과목이 하나도 없으면 원래 계수 사용
+      for (const sem of SEMS) {
+        finalWeights[sem.key] = effectiveWeights[sem.key];
+      }
+    }
+
     let sum = 0;
     for (const sem of SEMS) {
-      const w = effectiveWeights[sem.key];
+      const w = finalWeights[sem.key];
       if (w <= 0) continue;
       const { avg } = semStats(sem.key);
       sum += avg * w;

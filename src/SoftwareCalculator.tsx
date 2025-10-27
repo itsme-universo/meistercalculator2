@@ -263,10 +263,54 @@ export default function SoftwareCalculator() {
 
   // ---------- 교과 점수(재/졸: 80점 만점) ----------
   const calcCourseScoreRegular = () => {
+    // 각 학기에 등급이 입력된 과목이 있는지 확인
+    const semesterHasGrades = (semKey: string) => {
+      for (const sub of SUBJECTS) {
+        const val = grades[semKey]?.[sub.key] ?? "";
+        const p = mapGradeToPoint(val);
+        if (p != null) return true;
+      }
+      return false;
+    };
+
+    // 실제 과목이 있는 학기 찾기
+    const semsWithGrades: string[] = [];
+    for (const sem of SEMS) {
+      if (semesterHasGrades(sem.key)) {
+        semsWithGrades.push(sem.key);
+      }
+    }
+
+    // 과목이 있는 학기에만 계수 재분배
+    const finalWeights: Record<string, number> = {};
+    if (semsWithGrades.length > 0) {
+      // 과목이 있는 학기들의 원래 계수 합계
+      let totalWeightWithGrades = 0;
+      for (const semKey of semsWithGrades) {
+        totalWeightWithGrades += effectiveWeights[semKey];
+      }
+
+      // 계수 총합 20을 과목이 있는 학기에만 비례 분배
+      const targetSum = 20;
+      for (const sem of SEMS) {
+        if (semsWithGrades.includes(sem.key)) {
+          const ratio = effectiveWeights[sem.key] / totalWeightWithGrades;
+          finalWeights[sem.key] = targetSum * ratio;
+        } else {
+          finalWeights[sem.key] = 0;
+        }
+      }
+    } else {
+      // 과목이 하나도 없으면 원래 계수 사용
+      for (const sem of SEMS) {
+        finalWeights[sem.key] = effectiveWeights[sem.key];
+      }
+    }
+
     // 가중합 (최대 100)
     let sum = 0;
     for (const sem of SEMS) {
-      const w = effectiveWeights[sem.key];
+      const w = finalWeights[sem.key];
       if (w <= 0) continue;
       const avg = semesterAverage(sem.key); // 1~5
       sum += avg * w; // w 합=20 → 최대 100
@@ -275,7 +319,7 @@ export default function SoftwareCalculator() {
     // 규칙3: 한 학년 전체 자유학기인 경우 → 보정계수 적용(한 학년만 가능하도록 유효성 검사)
     const yearAllZero = (year: number) =>
       SEMS.filter((s) => s.year === year).every(
-        (s) => (effectiveWeights[s.key] || 0) === 0
+        (s) => (finalWeights[s.key] || 0) === 0
       );
 
     let adjusted = sum;
