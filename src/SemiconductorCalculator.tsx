@@ -247,7 +247,7 @@ export default function SemiconductorCalculator({ onBack }: SemiconductorCalcula
 
       const w = row.mathSci ? 1.5 : 1;
       num += p * w;
-      den += w;
+      den += 1; // 과목 수는 1개로 카운트 (점수에만 가중치 적용)
 
       weightedCount += w;
       includedRowCount += 1;

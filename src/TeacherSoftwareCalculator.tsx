@@ -190,8 +190,8 @@ export default function TeacherSoftwareCalculator() {
     for (const r of rows) {
       const p = mapGradeToPoint(r.grade);
       if (p == null) continue;
-      const weight = r.mathSci ? 1.5 : 1;
-      num += p * weight; den += weight; cnt += 1;
+      const weight = r.mathSci ? 2 : 1; // 수학/과학/정보 2배
+      num += p * weight; den += 1; cnt += 1; // 과목 수는 1개로 카운트 (점수에만 가중치 적용)
     }
     const avg = den === 0 ? 0 : num / den;
     return { count: cnt, avg };
@@ -471,7 +471,7 @@ export default function TeacherSoftwareCalculator() {
                 if (isFreeSemester) {
                   freeSem[semKey] = true;
                 } else {
-                  const isMathSci = subjectName.includes("수학") || subjectName.includes("과학");
+                  const isMathSci = subjectName.includes("수학") || subjectName.includes("과학") || subjectName.includes("정보");
                   subjects[semKey].push({ name: subjectName.trim(), grade: grade, mathSci: isMathSci });
                 }
               }

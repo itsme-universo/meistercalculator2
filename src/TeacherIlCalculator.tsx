@@ -90,7 +90,7 @@ function convertSemesterFormat(semesterStr: string) {
   return semesterStr; // 변환 실패 시 원본 반환
 }
 
-type SubjRow = { name: string; grade: string; mathSci: boolean };
+type SubjRow = { name: string; grade: string };
 
 interface StudentData {
   examNumber: string;
@@ -205,8 +205,7 @@ export default function TeacherIlCalculator() {
     for (const r of rows) {
       const p = mapGradeToPoint(r.grade);
       if (p == null) continue;
-      const weight = r.mathSci ? 1.5 : 1;
-      num += p * weight; den += weight; cnt += 1;
+      num += p; den += 1; cnt += 1;
     }
     const avg = den === 0 ? 0 : num / den;
     return { count: cnt, avg };
@@ -486,8 +485,7 @@ export default function TeacherIlCalculator() {
                 if (isFreeSemester) {
                   freeSem[semKey] = true;
                 } else {
-                  const isMathSci = subjectName.includes("수학") || subjectName.includes("과학");
-                  subjects[semKey].push({ name: subjectName.trim(), grade: grade, mathSci: isMathSci });
+                  subjects[semKey].push({ name: subjectName.trim(), grade: grade });
                 }
               }
             }
