@@ -21,10 +21,10 @@ const SEMS = [
 function baseCoeff(atype: ApplicantType, semKey: string) {
   if (atype === "검정고시") return 0;
   if (atype === "재학생") {
-    const map: Record<string, number> = { "1-1": 2, "1-2": 2, "2-1": 4, "2-2": 4, "3-1": 8, "3-2": 0 };
+    const map: Record<string, number> = { "1-1": 2, "1-2": 2, "2-1": 3, "2-2": 3, "3-1": 10, "3-2": 0 };
     return map[semKey] ?? 0;
   }
-  const map: Record<string, number> = { "1-1": 2, "1-2": 2, "2-1": 4, "2-2": 4, "3-1": 4, "3-2": 4 };
+  const map: Record<string, number> = { "1-1": 2, "1-2": 2, "2-1": 3, "2-2": 3, "3-1": 5, "3-2": 5 };
   return map[semKey] ?? 0;
 }
 
